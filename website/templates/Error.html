@@ -1,0 +1,9 @@
+{% extends "base.html"%}
+{% block title %}error{% endblock %}
+{% block content %}
+    <!--Use Passed Error Message-->
+    <h1 class="center">{{message}}</h1>
+    <div class="center">
+        <img src="/static/images/error.png" alt="error"width="50%" height="40%">
+    </div>
+{%endblock%}
