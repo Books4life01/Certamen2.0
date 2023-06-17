@@ -1,0 +1,44 @@
+{%extends "base.html"%}
+{%block title%}HOST{%endblock%}
+{%block script%}<script>
+    window.onload = () => {
+        $("#createTourn").on("click", createTourn);
+              
+       
+    };
+    function createTourn(){
+        window.location.href = "/host/createTourn";
+    }
+   
+</script>{%endblock%}
+{%block styles%}<style>
+    .container{
+        border: 1px solid blue;
+    }
+    #left{
+        float:left;
+        width:50%;
+        height: 100%;
+    }
+    #right{
+        float:right;
+        width:50%;
+        height: 100%;
+    }
+</style>{%endblock%}
+{%block content%}
+
+
+<div class = "container" id="left">
+    <h1 id="liveHeader">
+        LIVE
+    </h1>
+</div>
+<div class = "container"id="right">
+    <h1 id="scoreHeader" >
+        SCORE
+    </h1>
+</div>
+
+
+{%endblock%}

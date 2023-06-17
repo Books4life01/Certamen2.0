@@ -3,6 +3,7 @@ from flask_socketio import SocketIO
 from flask_sqlalchemy import SQLAlchemy
 from os import path
 
+
 db = SQLAlchemy()
 DB_NAME = "database.db"
 
@@ -24,7 +25,7 @@ def create_app():
 
     app.register_blueprint(views, url_prefix="/")
     app.register_blueprint(play, url_prefix="/play")
-    app.register_blueprint(host, url_prefix="/host")
+    app.register_blueprint(host, url_prefix="/host", db=db)
     app.register_blueprint(scorekeep, url_prefix="/scorekeep")
 
     #importing the models from models.py
