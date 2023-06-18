@@ -2,42 +2,34 @@
 {%block title%}Play{%endblock%}
 {%block styles%}
 <style>
-    .box{
-        padding: 20px;
-        background-color: var(--secondary-color);
-        color: var(--tertiary-color);
-        border: 1px solid var(--primary-color);
-    }
-    .hidden{
-        display: none;
-    }
+    
     
 
 </style>
 {%endblock%}
 {%block script%}<script>
     window.onload = () =>{//when the page loads(ensure that the checkbox will be loaded in)
-        let hasPlayerCode = document.getElementById("hasPlayerCode")
-        hasPlayerCode.addEventListener("click", function(){
-            let playerCodeDiv = document.getElementById("playerCodeDiv");
+        let hasPlayerKey = document.getElementById("hasPlayerKey")
+        hasPlayerKey.addEventListener("click", function(){
+            let playerKeyDiv = document.getElementById("playerKeyDiv");
             let playerNameDiv = document.getElementById("playerNameDiv");
-            if(hasPlayerCode.checked){
-                //iF THE PLAYER HAS A CODE TO USE: 
-                //-reveal the player code div
+            if(hasPlayerKey.checked){
+                //iF THE PLAYER HAS A Key TO USE: 
+                //-reveal the player Key div
                 //-hide the player name div
                 //-clear the player name input
-                playerCodeDiv.classList.remove("hidden");
+                playerKeyDiv.classList.remove("hidden");
                 playerNameDiv.classList.add("hidden");
                 playerNameDiv.children[1].value = ""; 
             }
             else{
-                 //iF THE PLAYER DOES NOT HAVE A CODE TO USE: 
-                //-reveal the player code div
+                 //iF THE PLAYER DOES NOT HAVE A Key TO USE: 
+                //-reveal the player Key div
                 //-hide the player name div
                 //-clear the player name input
                 playerNameDiv.classList.remove("hidden");
-                playerCodeDiv.classList.add("hidden");
-                playerCodeDiv.children[1].value = ""; 
+                playerKeyDiv.classList.add("hidden");
+                playerKeyDiv.children[1].value = ""; 
 
             }
         });
@@ -46,28 +38,31 @@
 {%block content%}
 <h1 class = "center">Play Certamen</h1>
 <div class="container box" id="form-container">
-    <h5 class="center">Enter Tournament and Player Codes to join Game</h2>
-    <!-- Ask for Tournament Code and Player Code-->
+    <h5 class="center">Enter Tournament and Player Keys to join Game</h2>
+   
+    <!-- Ask for Tournament Key and Player Key-->
     <form action="/play/joinTourn" class="form-inline">
+        <!-- Div to Enter Tournament Key: using text input-->
         <div class="form-group">
-            <label for="tournCodeInput">Tournament Code</label>
-            <input type="text" class="form-control form" id="tournCodeInput" name="tournCode" placeholder="Enter Tournament Code">
+            <label for="tournKeyInput">Tournament Key</label>
+            <input type="text" class="form-control form" id="tournKeyInput" name="tournKey" placeholder="Enter Tournament Key">
         </div>
+        <!--Div to see if using Player Key: using checkbox-->
         <div class="form-group form-check">
-            <label for="hasPlayerCode" class="form-checek-label">Have you Recieved a Player Code?</label>
-            <input class = "form-check-input" type="checkbox" id="hasPlayerCode" value="hasPlayerCode">
+            <label for="hasPlayerKey" class="form-checek-label">Have you Recieved a Player Key?</label>
+            <input class = "form-check-input" type="checkbox" id="hasPlayerKey" value="hasPlayerKey">
         </div>
-        <div class="form-group hidden" id="playerCodeDiv">
-            <label for="playerCodeInput" id="playerCodeInputLabel">Player Code</label>
-            <input type="text" class="form-control" id="playerCodeInput" name="playerCode" placeholder="Enter your Code">
+        <!--Div to Enter either Player Key or Player Name: using text input     (USES JS to hide one but not the other)-->
+        <div class="form-group hidden" id="playerKeyDiv">
+            <label for="playerKeyInput" id="playerKeyInputLabel">Player Key</label>
+            <input type="text" class="form-control" id="playerKeyInput" name="playerKey" placeholder="Enter your Key">
         </div>
         <div class="form-group" id="playerNameDiv">
             <label for="playerNameInput" id="playerNameInputLabel">Player Name</label>
             <input type="text" class="form-control" id="playerNameInput" name="playerName" placeholder="Enter your Name">
         </div>
         <button type="submit" class="btn btn-primary">Submit</button>
-    </form>
-     <!-- Additional Info for Form above: 
+        <!-- Additional Info for Form above: 
                 Bootstrap Classes Info: 
                     - form-group: adds margins and padding between form elements
                     - form-control: applies styles to form elements making them look consistent
@@ -78,6 +73,19 @@
                 - name attribute in input is what is passed in the body of the request the form sends
                 - placeholder attribute is the text that appears in the input box before the user types anything
     -->
+    </form>
+    
+     <!--Display Flashed Messages using Jinja -->
+     {%with messages = get_flashed_messages() %}
+     {%if messages%}
+         {%for message in messages%}
+             <div class="alert alert-danger" role="alert">
+                 {{message}}
+             </div>
+         {%endfor%}
+     {%endif%}
+ {%endwith%}
+     
 </div>
 {%endblock%}
 

@@ -1,44 +1,33 @@
 {%extends "base.html"%}
 {%block title%}HOST{%endblock%}
-{%block script%}<script>
-    window.onload = () => {
-        $("#createTourn").on("click", createTourn);
-              
-       
-    };
-    function createTourn(){
-        window.location.href = "/host/createTourn";
-    }
-   
-</script>{%endblock%}
 {%block styles%}<style>
-    .container{
-        border: 1px solid blue;
-    }
-    #left{
-        float:left;
-        width:50%;
-        height: 100%;
-    }
-    #right{
-        float:right;
-        width:50%;
-        height: 100%;
-    }
+
+
 </style>{%endblock%}
+{%block script%}<script>
+$(document).ready(() => {
+    $("#manageButton").on("click", () =>{window.location.href = "/host/manage"});
+    $("#hostButton").on("click", () =>{window.location.href = "/host/create"});
+});
+
+</script>{%endblock%}
 {%block content%}
-
-
-<div class = "container" id="left">
-    <h1 id="liveHeader">
-        LIVE
-    </h1>
+<!--Determine if the User would like to manage a preexisting Certamen game or create a new one to host-->
+<h1 class="center">MANAGE or CREATE?</h1>
+<div>
+    <div class="left">
+        <h1 class="center">MANAGE</h1>
+        <p class="center">Manage a preexisting Certamen game</p>
+        <div class="center">
+            <button id="manageButton" class="center btn btn-primary">MANAGE GAME</button>
+        </div>
+    </div>
+    <div class="right">
+        <h1 class="center">CREATE</h1>
+        <p class="center">CREATE a new Certamen game</p>
+        <div class="center">
+            <button id="hostButton" class="center btn btn-primary">CREATE GAME</button>
+        </div>
+    </div>
 </div>
-<div class = "container"id="right">
-    <h1 id="scoreHeader" >
-        SCORE
-    </h1>
-</div>
-
-
 {%endblock%}
