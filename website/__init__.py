@@ -1,7 +1,8 @@
-from flask import Flask
+from flask import Flask, jsonify, request
 from flask_socketio import SocketIO
 from flask_sqlalchemy import SQLAlchemy
 from os import path
+import json
 
 
 db = SQLAlchemy()
@@ -29,13 +30,42 @@ def create_app():
     app.register_blueprint(manage, url_prefix="/host/manage", db=db)
 
     #importing the models from models.py
-    from .models import Player, Tournament, Room
+    from .models import Player, Tournament, Room, Team
+    #create the database
     with app.app_context():
         db.create_all()
 
 
     
-    #create socketio instance
-    socketio = SocketIO(app, cors_allowed_origins="*")
+   
+
 
     return app
+def createSocketServer(app):
+    socketio = SocketIO(app, cors_allowed_origins="*")
+
+    #import models
+    from .models import Player, Tournament, Room, Team
+    
+    #Manage Connection
+    @socketio.on('connect')
+    def connect():
+        print("Connected")
+    
+
+    #On data Refresh Request
+    @socketio.on('tournDataRefreshRequest')
+    def refresh(message):
+        #retrieve request data
+        tournKey = message["tournKey"]
+
+        print("Data Refresh Requested")
+        #Grab room Data from database
+        rooms = Room.query.filter_by(superTournament=tournKey).all()
+        #convert to list of dicts
+        rooms_list = [room.to_dict() for room in rooms]
+        print(str(rooms_list))
+
+        socketio.emit('roomsUpdate', json.loads(json.dumps(rooms_list)))
+
+    return socketio

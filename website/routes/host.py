@@ -14,16 +14,17 @@ def create():
     return render_template("create.html")
 
 
-#CREATE SUB ROUTES
-@host.route('/create/live')
+#CREATE 'POST' ROUTES
+@host.route('/create/live', methods=[ 'POST'])
 def createLive():
-    #Create new Tournament
-    tournKey = Tournament.create(tournName="Certamen Tournament", liveTourn=True)
-    return render_template(url_for('host.manage.tourn', tournKey=tournKey))
-@host.route('/create/score')
+    #Create new Live Tournament
+    tournKey = Tournament.create(tournName=request.form['tournName'], liveTourn=True)
+    return redirect(url_for('manage.tourn', tournKey=tournKey))
+@host.route('/create/score', methods=[ 'POST'])
 def createScore():
-    #do stuff
-    return render_template("error.html")
+    #Create new ScoreBoard Tournament
+    tournKey = Tournament.create(tournName=request.form['tournName'], liveTourn=False)
+    return redirect(url_for('manage.tourn', tournKey=tournKey))
 
 
 #

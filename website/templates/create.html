@@ -15,9 +15,12 @@
     .container{
         border: 1px solid blue;
     }
+    form{
+    }
     
     .btn-primary{
         background-color: var(--primary-color);
+        border:none;
     }
 </style>{%endblock%}
 {%block content%}
@@ -30,12 +33,10 @@
     <p>
                 Hosting a LIVE Game allows multiple players to join indivisual rooms and participate in a virtual live certamen game. Host send out questions from their computers and contestants buzz in to answer.
     </p>
-
-    <div class="center">
-        <button id="liveButton" class="center btn btn-primary">
-            HOST LIVE GAME
-        </button>
-    </div>
+    <form action = "/host/create/live" method="POST"class="input-group mb-3">
+        <input type="text" class="form-control" name="tournName" placeholder="Tournament Name" aria-describedby="tournNameLabel">
+        <input type="submit" value="Create Live Game" class="btn btn-primary">
+    </form>
 </div>
 <div class = "container center right">
     <h1 id="scoreHeader" class="center">
@@ -44,9 +45,11 @@
     <p>
                 A SCOREBOARD Game simulates a virtual Certamen tournament scoring system. Host can create rooms where other oher hosts(to whom the room key has been shared) can virtually score the results of a certamen game played in person. These results will be compiled providing quick and detailed game and tournamen reports. 
     </p>
-    <button id="scoreButton" class="center btn btn-primary">
-        HOST SCOREBOARD 
-    </button>
+    <form action = "/host/create/score" method="POST"class="input-group mb-3">
+        <input type="text" class="form-control"name="tournName" placeholder="Tournament Name" aria-describedby="tournNameLabel">
+        <input type="submit" value="Create ScoreBoard Game" class="btn btn-primary">
+    </form>
+    
 </div>
 
 

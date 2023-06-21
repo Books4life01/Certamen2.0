@@ -71,7 +71,7 @@ class Room(db.Model):
     #key of the room
     roomKey = db.Column(db.String(8), unique=True)
     #key of the super Tournament
-    superTournament = db.Column(db.Integer, db.ForeignKey('tournament.tournamentId'))
+    superTournament = db.Column(db.String(8), db.ForeignKey('tournament.tournamentKey'))
    
     #Teams in the Room: Max of 4
     teamA = db.Column(db.Integer, db.ForeignKey('team.teamId'), nullable=True)

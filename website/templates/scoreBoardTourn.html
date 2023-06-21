@@ -1,0 +1,29 @@
+{%extends "base.html"%}
+{%block script%}<script>
+    const socket = io("http://192.168.4.127:8080");
+    socket.on("connect", () => {
+        console.log("connected");
+        //Reqeust Data Refresh from the server
+        socket.emit("tournDataRefreshRequest", data = {
+            "tournKey": {{ tournKey|tojson }}
+        });
+    });
+    //Receive Tournament Data from the server
+    socket.on("roomsUpdate", (data) => {
+        console.log(data);
+    });
+    socket.on("teamsUpdate", (data) => {
+        console.log(data);
+    });
+    socket.on("disconnect", () => {
+        console.log("disconnected from server");
+    });
+    
+
+
+</script>{%endblock%}
+{%block styles%}
+{%endblock%}
+{%block content%}
+<h1>ScoreBoard TOURN {{tournKey}}</h1>
+{%endblock%}
