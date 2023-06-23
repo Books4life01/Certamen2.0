@@ -29,11 +29,19 @@ class Tournament(db.Model):
     #players in the tournament
     players = db.relationship('Player', lazy=True)
     #rooms in the tournament
-    rooms = db.Column(db.Integer, db.ForeignKey('room.roomKey'))
+    rooms = db.relationship('Room', lazy=True, backref='tournament')
      #Live means the tournament is hosting a virtual game raher than being used as a scoring tool
     liveTourn = db.Column(db.Boolean, unique=False)
 
     #FUNCTIONS
+    #create new room for the tournament
+    def createRoom(self, roomName):
+        room = Room.createRoom(roomName, self.tournamentKey)
+        self.rooms.append(room)
+        db.session.commit()#commiting because we are changing the database
+        return room.roomKey
+    
+    #__________STATIC_____________
     #see if a tournament exsists
     @staticmethod
     def exists(tournKey):
@@ -52,6 +60,7 @@ class Tournament(db.Model):
         db.session.add(tourn)
         db.session.commit()
         return key
+    #generate a key for the tournament
     @staticmethod
     def generateKey():
         key = ""
@@ -64,6 +73,9 @@ class Tournament(db.Model):
             while len(key) < 8:
                 key += values[random.randint(0, len(values) - 1)]
         return key
+    
+
+    
         
 class Room(db.Model):
      #id of the room
@@ -71,13 +83,71 @@ class Room(db.Model):
     #key of the room
     roomKey = db.Column(db.String(8), unique=True)
     #key of the super Tournament
-    superTournament = db.Column(db.String(8), db.ForeignKey('tournament.tournamentKey'))
+    superTournamentKey = db.Column(db.String(8), db.ForeignKey('tournament.tournamentKey'))
+    #name of the room
+    roomName = db.Column(db.String(200), unique=False)
+    
+
+
+
    
     #Teams in the Room: Max of 4
     teamA = db.Column(db.Integer, db.ForeignKey('team.teamId'), nullable=True)
     teamB = db.Column(db.Integer, db.ForeignKey('team.teamId'), nullable=True)
     teamC = db.Column(db.Integer, db.ForeignKey('team.teamId'), nullable=True)
     teamD = db.Column(db.Integer, db.ForeignKey('team.teamId'), nullable=True)
+
+    #@property is used to make a function act like a variable
+    @property
+    def isLive(self):
+        return db.query(Tournament).filter_by(tournamentKey=self.superTournamentKey).first().liveTourn
+    #serialize the room object by converting it to a dictionary; we do this so we can send it as a json object
+    @property
+    def serialize(self):
+        return {
+            'roomId': self.roomId,
+            'roomKey': self.roomKey,
+            'superTournament': self.superTournamentKey,
+            'roomName': self.roomName,
+            'teamA': self.teamA,
+            'teamB': self.teamB,
+            'teamC': self.teamC,
+            'teamD': self.teamD
+        }
+    #STATIC FUNCTIONS
+    #see if a room exsists
+    @staticmethod
+    def exists(roomKey):
+        room = db.session.query(Room).filter_by(roomKey=roomKey).first()
+        if room:
+            return True
+        else:
+            return False
+    @staticmethod
+    def createRoom(roomName, superTournamentKey):
+        #Generate a Key
+        key = Room.generateRoomKey()
+        #Create a new room passing the key, name, and if it is live or not; id is auto generated
+        room = Room(roomName=roomName, superTournamentKey=superTournamentKey, roomKey=key)
+        db.session.add(room)
+        db.session.commit()
+        return room
+    #generates a unique key for the room
+    @staticmethod
+    def generateRoomKey():
+        key = ""
+        values = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789"
+        #Create a key while the key is empty or the key already exists
+        while len(key) ==0 or Room.exists(key):
+            key = "" #reset key
+            #create a key of 8 characters using lower and upper case letters and numbers
+            #62^8=218,340,105,584,896 possible keys a lot
+            while len(key) < 8:
+                key += values[random.randint(0, len(values) - 1)]
+        return key
+    
+
+
 class Team(db.Model):
     #id of the team
     teamId = db.Column(db.Integer, primary_key=True, unique=True)

@@ -1,5 +1,6 @@
 {%extends "base.html"%}
 {%block script%}<script>
+    //set up client socket
     const socket = io("http://192.168.4.127:8080");
     socket.on("connect", () => {
         console.log("connected");
@@ -18,12 +19,126 @@
     socket.on("disconnect", () => {
         console.log("disconnected from server");
     });
+
+    //set up event listeners
+    $(document).ready(() => {
+        $("#addItem").click(() => {
+            $("#addRoomModal").modal("show");
+        });
+        $("[data-toggle='tooltip']").tooltip();
+    });
     
 
 
 </script>{%endblock%}
-{%block styles%}
-{%endblock%}
+{%block styles%}<style>
+.btn-primary{
+    background-color: var(--primary-color);
+}
+.modal-header, .modal-body, .modal-footer{
+    background-color: var(--primary-color);
+    color: var(--tertiary-color);
+    width:100%;
+    border-bottom: 1px solid var(--secondary-color);
+}
+.nav-tabs{
+    border:none;
+}
+button.nav-link{
+    background-color: white;
+    color: black;
+}
+.nav-tabs > .nav-item > button.active{
+    background-color: var(--secondary-color);
+    color: var(--tertiary-color);
+    font-weight: 800;
+    font-size: large;
+    border:none;
+}
+
+label{
+    font-weight: 600;
+    font-size: large;
+    color: var(--secondary-color);
+}
+.btn-close{
+    position:absolute;
+    top:5%;
+    right:2%;
+}
+
+i{
+    padding-bottom:1%;
+}
+</style>{%endblock%}
 {%block content%}
 <h1>ScoreBoard TOURN {{tournKey}}</h1>
+<div class="modal fade" tabindex="-1" id="addRoomModal">
+    
+    <div class="modal-dialog" role="document">
+        <div class="modal-content center" id="nav-container">
+            <!--Modal Header-->
+            <div class="modal-header d-flex justify-content-center">
+                    <ul class="nav nav-tabs center" id="createTab" role="tablist">
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link active" id="room-tab" data-bs-toggle="tab" data-bs-target="#room" type="button" role="tab" aria-controls="room" aria-selected="true">Room</button>
+                        </li>
+                         <li class="nav-item" role="presentation">
+                            <button class="nav-link " id="team-tab" data-bs-toggle="tab" data-bs-target="#team" type="button" role="tab" aria-controls="team" aria-selected="true">Team</button>
+                        </li>
+                         <li class="nav-item" role="presentation">
+                            <button class="nav-link " id="player-tab" data-bs-toggle="tab" data-bs-target="#player" type="button" role="tab" aria-controls="player" aria-selected="true">Player</button>
+                        </li>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+
+                    </ul>
+            </div>
+            <!--Modal Body-->
+            <div class="modal-body">
+                <div class="tab-content" id="createTabContent">
+                    <div class="tab-pane fade show active" id="room" role="tabpanel" aria-labelledby="room-tab">
+                        <form method="POST" action="/host/manage/tourn/room">
+                            <input type="hidden" name="tournKey" value="{{tournKey}}">
+                            <label for="roomNameInput">Enter Room Name:</label>
+                            <input type="text" name="roomName" id="roomNameInput" placeholder="....">
+                            <input type="submit" value="Create Room">
+                        </form>
+                    </div>
+                    <div class="tab-pane fade" id="team" role="tabpanel" aria-labelledby="team-tab">
+                        <form method="POST" action="/host/manage/tourn/team">
+                            <input type="hidden" name="tournKey" value="{{tournKey}}">
+                            <label for="teamNameInput">Enter Team Name:</label>
+                            <input type="text" name="teamName" id="teamNameInput" placeholder="....">
+                            <input type="submit" value="Create Team">
+
+                        </form>
+                    </div>
+                    <div class="tab-pane fade" id="player" role="tabpanel" aria-labelledby="player-tab">
+                        <form method="POST" action="/host/manage/tourn/player">
+                            <input type="hidden" name="tournKey" value="{{tournKey}}">
+                            <label for="playerNameInput">Enter Player Name:</label>
+                            <input type="text" name="playerName" id="playerNameInput" placeholder="....">
+                            <input type="submit" value="Create Player">
+
+                        </form>
+                    </div>
+
+
+                </div>
+            </div>
+            <!--Modal Footer-->
+            <div class="modal-footer">
+                
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<nav class="navbar fixed-bottom">
+    <div class="container-fluid">
+        <i class="fa-solid fa-plus fa-2xl" id="addItem" data-toggle="tooltip" title="Create new Room or Tournament"></i>
+    </div>
+
+</nav>
 {%endblock%}

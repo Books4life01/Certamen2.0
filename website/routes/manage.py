@@ -15,7 +15,21 @@ def tourn():
           return render_template("liveTourn.html", tournKey=tournKey)
      else:
             return render_template("scoreBoardTourn.html", tournKey=tournKey)
+     
 
+#post routes
+@manage.route('/tourn/room', methods=['POST'])
+def createRoom():
+    #get the tournament key from the request
+    tournKey = request.form['tournKey']
+    #get the room name from the request
+    roomName = request.form['roomName']
+    #creates a room and returns the room key
+    tourn = db.session.query(Tournament).filter_by(tournamentKey=tournKey).first()
+    roomKey = tourn.createRoom(roomName)
+    return redirect(url_for('manage.tourn', tournKey=tournKey))
+    
+     
 
 
 #________________INSTANTANEOUS ROUTES______
@@ -26,7 +40,7 @@ def authenticateToutn():
     tournKey = request.args.get('tournKey')#Retrieve Tournament Key from rewuest
 
     if Tournament.exists(tournKey):
-        return redirect(url_for('host.manage.tourn', tournKey=tournKey))
+        return redirect(url_for('manage.tourn', tournKey=tournKey))
     else:
         flash("Invalid Tournament Key")
         return redirect(url_for('manage.home'))

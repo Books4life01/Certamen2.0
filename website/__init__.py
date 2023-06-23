@@ -61,11 +61,11 @@ def createSocketServer(app):
 
         print("Data Refresh Requested")
         #Grab room Data from database
-        rooms = Room.query.filter_by(superTournament=tournKey).all()
+        rooms = Room.query.filter_by(superTournamentKey=tournKey).all()
         #convert to list of dicts
-        rooms_list = [room.to_dict() for room in rooms]
-        print(str(rooms_list))
+        rooms = [room.serialize for room in rooms]
+       
 
-        socketio.emit('roomsUpdate', json.loads(json.dumps(rooms_list)))
+        socketio.emit('roomsUpdate', rooms)
 
     return socketio
