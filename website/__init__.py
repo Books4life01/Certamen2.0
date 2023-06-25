@@ -1,6 +1,7 @@
 from flask import Flask, jsonify, request
 from flask_socketio import SocketIO
 from flask_sqlalchemy import SQLAlchemy
+from sqlalchemy.sql import text
 from os import path
 import json
 
@@ -41,7 +42,10 @@ def create_app():
 
 
     return app
+
+#set up socket server
 def createSocketServer(app):
+    #create socket server
     socketio = SocketIO(app, cors_allowed_origins="*")
 
     #import models
@@ -59,13 +63,31 @@ def createSocketServer(app):
         #retrieve request data
         tournKey = message["tournKey"]
 
-        print("Data Refresh Requested")
-        #Grab room Data from database
-        rooms = Room.query.filter_by(superTournamentKey=tournKey).all()
-        #convert to list of dicts
-        rooms = [room.serialize for room in rooms]
-       
-
+        print("Tourn Data Refresh Requested")
+        #Grab tournnament object from database using tournKey
+        tourn = Tournament.query.filter_by(tournamentKey=tournKey).first()
+        #retrieve list of rooms(list of objects) from tournament object
+        rooms = tourn.getRooms()
+        #send room data to client
         socketio.emit('roomsUpdate', rooms)
+        print("Rooms Data Sent")
+
+        #retrieve list of teams(list of objects) from tournament object
+        teams = tourn.getTeams()
+        socketio.emit('teamsUpdate', teams)
+    @socketio.on('roomDataRefreshRequest')
+    def refresh(message):
+        #retrieve roomKey from request
+        roomKey = message["roomKey"]
+        print("Room Data Refresh Requested")
+        #grab  the superTournKey from the room database 
+        superTournKey = Room.query.filter_by(roomKey=roomKey).first().superTournamentKey
+        #grab the tournament object from the database using the superTournKey
+        tourn = Tournament.query.filter_by(tournamentKey=superTournKey).first()
+        #retrieve list of teams(list of objects) from tournament object
+        teams = tourn.getTeams()
+        #send data to client
+        socketio.emit('teamsUpdate', teams)
+        print("Room Data Sent")
 
     return socketio

@@ -30,7 +30,9 @@ class Tournament(db.Model):
     players = db.relationship('Player', lazy=True)
     #rooms in the tournament
     rooms = db.relationship('Room', lazy=True, backref='tournament')
-     #Live means the tournament is hosting a virtual game raher than being used as a scoring tool
+    #teams in the tournament
+    teams = db.relationship('Team', lazy=True, backref='tournament')
+    #Live means the tournament is hosting a virtual game raher than being used as a scoring tool
     liveTourn = db.Column(db.Boolean, unique=False)
 
     #FUNCTIONS
@@ -40,6 +42,22 @@ class Tournament(db.Model):
         self.rooms.append(room)
         db.session.commit()#commiting because we are changing the database
         return room.roomKey
+    #add a team to the tournament
+    def createTeam(self, teamName):
+        team = Team.createTeam(teamName, self.tournamentKey)
+        self.teams.append(team)
+        db.session.commit()
+        return team.teamKey
+    #get a tournaments list of teams
+    def getTeams(self):
+        return [team.serialize for team in self.teams]
+    #get a tournaments list of rooms
+    def getRooms(self):
+        return [room.serialize for room in self.rooms]
+    #get a tournaments list of players
+    def getPlayers(self):
+        return [player.serialize for player in self.players]
+    
     
     #__________STATIC_____________
     #see if a tournament exsists
@@ -73,6 +91,8 @@ class Tournament(db.Model):
             while len(key) < 8:
                 key += values[random.randint(0, len(values) - 1)]
         return key
+    
+
     
 
     
@@ -155,8 +175,60 @@ class Team(db.Model):
     teamKey = db.Column(db.String(8), unique=True)
     #name of the team
     teamName = db.Column(db.String(100), unique=False)
+    #key of the super tournament
+    superTournamentKey = db.Column(db.String(8), db.ForeignKey('tournament.tournamentKey'))
+
     #Players in the team: Max of 4
     player1 = db.Column(db.Integer, db.ForeignKey('player.playerId'))
     player2 = db.Column(db.Integer, db.ForeignKey('player.playerId'))
     player3 = db.Column(db.Integer, db.ForeignKey('player.playerId'))
     player4 = db.Column(db.Integer, db.ForeignKey('player.playerId'))
+
+    #FUNCTIONS
+    #serialize the team object by converting it to a dictionary; we do this so we can send it as a json object
+    @property
+    def serialize(self):
+        return {
+            'teamId': self.teamId,
+            'teamKey': self.teamKey,
+            'teamName': self.teamName,
+            'superTournament': self.superTournamentKey,
+            'player1': self.player1,
+            'player2': self.player2,
+            'player3': self.player3,
+            'player4': self.player4
+        }
+
+    #STATIC FUNCTIONS
+    #see if a team exsists
+    @staticmethod
+    def exists(teamKey):
+        team = db.session.query(Team).filter_by(teamKey=teamKey).first()
+        if team:
+            return True
+        else:
+            return False
+    #create a new team
+    @staticmethod
+    def createTeam(teamName, superTournamentKey):
+        #Generate a Key
+        key = Team.generateTeamKey()
+        #Create a new team passing the key, name, and if it is live or not; id is auto generated
+        team = Team(teamName=teamName, superTournamentKey=superTournamentKey, teamKey=key)
+        db.session.add(team)
+        db.session.commit()
+        return team
+    #generates a unique key for the team
+    @staticmethod
+    def generateTeamKey():
+        key = ""
+        values = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789"
+        #Create a key while the key is empty or the key already exists
+        while len(key) ==0 or Room.exists(key):
+            key = "" #reset key
+            #create a key of 8 characters using lower and upper case letters and numbers
+            #62^8=218,340,105,584,896 possible keys a lot
+            while len(key) < 8:
+                key += values[random.randint(0, len(values) - 1)]
+        return key
+    

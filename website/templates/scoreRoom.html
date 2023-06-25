@@ -1,0 +1,76 @@
+{% extends "base.html"%}
+{% block title %}Room{% endblock %}
+{%block script%}<script>
+    //set up client socket
+    const socket = io("http://192.168.4.127:8080");
+    socket.on("connect", () => {
+        console.log("connected");
+        //Reqeust Data Refresh from the server
+        socket.emit("roomDataRefreshRequest", data = {
+            "roomKey": {{ roomKey|tojson }}
+        });
+    });
+    
+    socket.on("teamsUpdate", (data) => {
+        let teamsContainer = $("#teamsList");
+        data.forEach((team) => {
+            console.log(team);
+            let teamDiv = $("<div class='team'></div>");
+            let teamName = $("<h4></h4>").text(team.teamName);
+            teamDiv.append(teamName);
+            teamDiv.addClass("team");
+            teamDiv.attr("draggable", true);
+            teamsContainer.append(teamDiv);
+
+        });
+        console.log(data);
+    });
+    socket.on("disconnect", () => {
+        console.log("disconnected from server");
+    });
+
+    //set up event listeners
+    $(document).ready(() => {
+       
+    });
+    
+
+
+</script>{%endblock%}
+{% block styles %}<style>
+#teamsList{
+    position: absolute;
+    right: 1%;
+    top: 1%;
+    width:29%;
+    height:98%;
+    border: 1px solid blue;
+    border-radius: 25px;
+    overflow: scroll;
+}
+
+.overflow-container::-webkit-scrollbar, .room>*::-webkit-scrollbar, .team>*::-webkit-scrollbar{
+    width: 10px;
+  display: none;
+}
+
+#teamSelector{
+    position: relative;
+    width: 100%;
+    height: 300px;
+    border: 1px solid red;
+}
+.team{
+}
+</style>{% endblock %}
+
+{% block content %}
+<div class="container center" id="teamSelector">
+    <div id="roomTeams">
+    </div>
+     <div class="overflow-container" id="teamsList">
+    </div>
+
+</div>
+
+{% endblock %}

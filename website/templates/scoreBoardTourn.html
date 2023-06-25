@@ -11,9 +11,38 @@
     });
     //Receive Tournament Data from the server
     socket.on("roomsUpdate", (data) => {
-        console.log(data);
+        let roomsContainer = $("#roomsContainer");
+        data.forEach((room) => {
+            console.log(room);
+            let roomDiv = $("<div class='room'></div>");
+            let roomName = $("<h4></h4>").text(room.roomName);
+            let manageRoomBtn = $("<button class='btn btn-primary editRoom' ></button>").text("Manage Room");
+            manageRoomBtn.click(() => {
+               window.location.href = "/host/manage/room?roomKey=" + room.roomKey;
+            });
+            let roomKey = $("<h4></h4>").text(room.roomKey);
+            roomDiv.append(roomName);
+            roomDiv.append(manageRoomBtn);
+            roomDiv.append(roomKey);
+            roomsContainer.append(roomDiv);
+
+        });
+
     });
     socket.on("teamsUpdate", (data) => {
+        let teamsContainer = $("#teamsContainer");
+        data.forEach((team) => {
+            console.log(team);
+            let teamDiv = $("<div class='team'></div>");
+            let teamName = $("<h4></h4>").text(team.teamName);
+            let manageTeamBtn = $("<button class='btn btn-primary'></button>").text("Manage Team");
+            let teamKey = $("<h4></h4>").text(team.teamKey);
+            teamDiv.append(teamName);
+            teamDiv.append(manageTeamBtn);
+            teamDiv.append(teamKey);
+            teamsContainer.append(teamDiv);
+
+        });
         console.log(data);
     });
     socket.on("disconnect", () => {
@@ -26,6 +55,7 @@
             $("#addRoomModal").modal("show");
         });
         $("[data-toggle='tooltip']").tooltip();
+
     });
     
 
@@ -34,6 +64,7 @@
 {%block styles%}<style>
 .btn-primary{
     background-color: var(--primary-color);
+    margin: 2%;
 }
 .modal-header, .modal-body, .modal-footer{
     background-color: var(--primary-color);
@@ -66,6 +97,47 @@ label{
     top:5%;
     right:2%;
 }
+.overflow-container{
+    max-height: 200px;
+    overflow-y: scroll;
+    border: 1px solid blue;
+}
+.overflow-container::-webkit-scrollbar, .room>*::-webkit-scrollbar, .team>*::-webkit-scrollbar{
+    width: 10px;
+  display: none;
+}
+.room, .team{
+    justify-content: center;
+    display: flex;
+    flex-wrap: nowrap;
+    gap: 5%;
+
+}
+.room>*, .team>*{
+    display: inline-block;
+    color:black;
+    margin-left: 1%;
+    margin-right: 1%;
+    margin-top: 1%;
+    margin-bottom: 1%;
+    width: 20%;
+    overflow-y: scroll;
+    overflow-x: scroll;
+    text-align: center;
+    white-space: nowrap;
+}
+
+
+#roomsContainer, #teamsContainer{
+   background-color: var(--secondary-color);
+   border-radius: 25px;
+   width: 90%;
+   margin-left: 5%;
+    margin-right: 5%;
+}
+form{
+    white-space: nowrap;
+}
 
 i{
     padding-bottom:1%;
@@ -73,8 +145,19 @@ i{
 </style>{%endblock%}
 {%block content%}
 <h1>ScoreBoard TOURN {{tournKey}}</h1>
+<div id="roomsInfo" class="center">
+    <h1 class="center">Rooms:</h1>
+    <div id="roomsContainer" class="overflow-container center">
+        <div class="room" ><h6>Room Name</h6><h6>Edit Room</h6><h6>Room Key</h6></div>
+    </div>
+</div>
+<div class="center" id="teamsInfo">
+    <h1 class="center">Teams:</h1>
+    <div id="teamsContainer" class="overflow-container center">
+        <div class="team" ><h6>Team Name</h6><h6>Edit Team</h6><h6>Team Key</h6></div>
+    </div>
+</div>
 <div class="modal fade" tabindex="-1" id="addRoomModal">
-    
     <div class="modal-dialog" role="document">
         <div class="modal-content center" id="nav-container">
             <!--Modal Header-->
