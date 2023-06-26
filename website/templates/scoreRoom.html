@@ -1,6 +1,10 @@
 {% extends "base.html"%}
 {% block title %}Room{% endblock %}
 {%block script%}<script>
+
+    //set up global variables
+    let curQuestion = 1;
+    let results = [];
     //set up client socket
     const socket = io("http://192.168.4.127:8080");
     socket.on("connect", () => {
@@ -11,7 +15,7 @@
         });
     });
     
-    socket.on("teamsUpdate", (data) => {
+    socket.on("tournTeamsUpdate", (data) => {
         let teamsContainer = $("#teamsList");
         data.forEach((team) => {
             console.log(team);
@@ -20,10 +24,40 @@
             teamDiv.append(teamName);
             teamDiv.addClass("team");
             teamDiv.attr("draggable", true);
+            teamDiv.attr("id", team.teamKey);
+            //create event listeners for draag start and end to add classes to the element being dragged
+            teamDiv.on("dragstart", () =>teamDiv.addClass("dragging"));
+            teamDiv.on("dragend", () =>teamDiv.removeClass("dragging"));
+            teamDiv.on("dragstart", () =>drag(event));
+            
             teamsContainer.append(teamDiv);
 
         });
         console.log(data);
+    });
+    socket.on("roomTeamsUpdate", (data) =>{
+        console.log(data)
+        let teams = data.teams;
+        let droppableZones = document.getElementsByClassName("drop-zone");
+        for(let i = 0; i<4; i++){
+            let teamKey = teams[i];
+            console.log("teamKey:", teamKey);
+            if(teamKey != "" && teamKey != null){
+                let teamDiv = document.getElementById(teamKey);
+                teamDiv.classList.add("selectedTeam");
+                droppableZones[i].children[1].innerHTML = "";
+                droppableZones[i].children[1].appendChild(teamDiv);
+            }
+        }
+
+    });
+    socket.on("roomResultUpdate", (data) =>{
+        curQuestion = data.curQuestion;
+        results = data.resultList;
+        //update the question number
+        $("#questionNumber").text(curQuestion);
+        resetResults();
+        
     });
     socket.on("disconnect", () => {
         console.log("disconnected from server");
@@ -31,8 +65,131 @@
 
     //set up event listeners
     $(document).ready(() => {
-       
+        $("#teamLetter").on("change", () => {
+           updateResultData();
+        });
+        $("#teamMember").on("change", () => {
+            updateResultData();
+        });
+        $("#tossup").on("change", () => {
+            updateResultData();
+        });
+        $("#bonus1").on("change", () => {
+            updateResultData();
+        });
+        $("#bonus2").on("change", () => {
+            updateResultData();
+        });
+        $("#advance").on("click", () => {
+            //update the result data from current question and signal we are moving on to the next question
+            updateResultData(curQuestion+1);
+            curQuestion++;
+            $("#questionNum").text(curQuestion);
+            resetResults();
+
+        });
+        $("#back").on("click", () => {
+            //update the result data from current question and signal we are moving on to the next question
+            updateResultData(curQuestion-1);
+            curQuestion--;
+            $("#questionNum").text(curQuestion);
+            resetResults();
+        });
     });
+
+    function updateResultData(roomCurQuestion=curQuestion){
+            let teamLetter = $("#teamLetter").val();
+            let teamMember = $("#teamMember").val();
+            let tossup = teamLetter == "0" ? false : true;
+            let bonus1 = $("#bonus1").prop("checked");
+            let bonus2 = $("#bonus2").prop("checked");
+            if(results.length < roomCurQuestion) results.push({
+                "teamLetter": teamLetter,
+                "teamMember": teamMember, 
+                "tossup":tossup, 
+                "bonus1":bonus1,
+                "bonus2":bonus2
+            })
+            else{
+                results[roomCurQuestion-1].teamLetter = teamLetter;
+                results[roomCurQuestion-1].teamMember = teamMember;
+                results[roomCurQuestion-1].tossup = tossup;
+                results[roomCurQuestion-1].bonus1 = bonus1;
+                results[roomCurQuestion-1].bonus2 = bonus2;
+
+            }
+            out = {
+                "roomKey": {{ roomKey|tojson }},
+                "roomCurQuestion": roomCurQuestion,
+                "questionNum": curQuestion,
+                "teamLetter": teamLetter,
+                "teamMember": teamMember, 
+                "tossup":tossup, 
+                "bonus1":bonus1,
+                "bonus2":bonus2
+            }
+            console.log(out);
+            socket.emit("roomResultUpdate", data = out);
+    }
+    function resetResults(){
+        //update current question with resultData  ofill in default values'
+        let resultData = results[curQuestion-1];
+        console.log(resultData)
+
+        $("#teamLetter").selectedIndex = parseInt(resultData.teamLetter);
+        $("teamMember").selectedIndex = parseInt(resultData.teamMember);
+        $("#bonus1").prop("checked", resultData.bonus1);
+        $("#bonus2").prop("checked", resultData.bonus2);
+    }
+
+    function drag(event){
+        event.dataTransfer.setData("text", event.target.id);
+        console.log("dragging:", event.target.id)
+    }
+    function drop(event){
+        event.preventDefault();//prevents default action of dropping which is to block the drop
+        var data = event.dataTransfer.getData("text");//retrieves the id of the element to drop  sent by the drag funcion
+        console.log(data)
+        //ensure the target is a droppable element and if it isnt retrive its parent element
+        let target = event.target;
+        while(!target.classList.contains("droppable")){
+            console.log("target:", target);
+            target = target.parentElement;
+        }
+
+        //remove all children from the target element and if the child is draggable reappend it to the teams list
+        Array.from(target.children).forEach((child) => {
+            if(child.getAttribute("draggable")){
+                child.classList.remove("selectedTeam");
+                document.getElementById("teamsList").appendChild(child);
+            }
+            else target.removeChild(child);
+        });
+
+        //add the selected team class to the element being dropped
+        let elem = document.getElementById(data);
+        elem.classList.add("selectedTeam");
+        
+        //append the element to the drop target
+        target.appendChild(elem);
+
+        //update the server with the new team assignments
+        let teamA = document.getElementById("Team A").children[1].children[0].id;
+        let teamB = document.getElementById("Team B").children[1].children[0].id;
+        let teamC = document.getElementById("Team C").children[1].children[0].id;
+        let teamD = document.getElementById("Team D").children[1].children[0].id;
+        socket.emit("teamAssignmentUpdate", data = {
+            "roomKey": {{ roomKey|tojson }},
+            "teamA": teamA,
+            "teamB": teamB,
+            "teamC": teamC,
+            "teamD": teamD
+        });
+    }
+    //prevents default action of dropping which is to block the drop
+    function allowDrop(event){
+        event.preventDefault();
+    }
     
 
 
@@ -47,9 +204,11 @@
     border: 1px solid blue;
     border-radius: 25px;
     overflow: scroll;
+    background-color: var(--quinary-color);
+    color: var(--tetratary-color);
 }
 
-.overflow-container::-webkit-scrollbar, .room>*::-webkit-scrollbar, .team>*::-webkit-scrollbar{
+.overflow-container::-webkit-scrollbar, .drop-zone::-webkit-scrollbar, .drop-zone>*::-webkit-scrollbar, .selectedTeam>*::-webkit-scrollbar{
     width: 10px;
   display: none;
 }
@@ -58,19 +217,213 @@
     position: relative;
     width: 100%;
     height: 300px;
-    border: 1px solid red;
+    background-color: var(--secondary-color);
+    color: var(--primary-color);
+    border-radius: 25px;
 }
-.team{
+.drop-zone{
+    width:100%;/*will distribute items equally across flex container*/
+    margin:1%;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    overflow-y: scroll;
+    overflow-x: scroll;
+
+}
+.drop-zone>h3{
+    overflow-y: scroll;
+    overflow-x: scroll;
+    white-space: nowrap;
+}
+
+#roomTeams{
+    position: absolute;
+    left: 1%;
+    top: 1%;
+    display: flex;
+    justify-content: space-evenly;
+
+
+    width: 68%;
+    height: 98%;
+}
+.droppable{
+    
+    border: 5px dotted var(--primary-color);
+    margin:2%;
+    max-height: 80%;
+    max-width: 100%;
+    flex:1;
+    /*Aligns text in center*/
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    
+}
+.dragging{
+    opacity: .25;
+    background-color: var(--primary-color);
+}
+.selectedTeam>*{
+    font-weight: 800;
+    font-size: xx-large;
+    overflow-x: scroll;
+    overflow-y: scroll;
+
+}
+.selectedTeam{
+    max-width: 100%;
+}
+#teamsDiv{
+    margin-top: 5%;
+}
+body{
+    height: 100vh;
+}
+.nav-tabs
+{
+    position: fixed;
+    bottom: 0;
+}
+.nav-item:hover{
+    background-color: var(--primary-color);
+    color: var(--secondary-color);
+}
+
+
+
+
+.arrow-right {
+    width: 0; 
+    height: 0; 
+    border-left: 20px solid green;
+    border-right: 20px solid transparent;
+    border-bottom: 20px solid transparent;
+    border-top: 20px solid transparent;
+    background:none;
+}
+.arrow-left {
+    width: 0; 
+    height: 0; 
+    border-left: 20px solid transparent;
+    border-right: 20px solid red;
+    border-bottom: 20px solid transparent;
+    border-top: 20px solid transparent;
+    background: none;
+}
+.arrows{
+    display: inline-flex;
+    justify-content: center;
+    align-items: center;
+    gap:10px;
+    border:5px solid black;
+    background-color: #00000
+}
+.tossup-header{
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 5px;
+    border: 1px solid black;
+}
+.result-holder>*{
+    border: 1px solid blue;
+}
+.result-holder{
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-direction: column;
+    gap: 10px;
+    border: 1px solid black;
+}
+.toss-up, .Bonus>*{
+    display: inline-flex;
+    align-items: center;
+}
+.form-select{
+    width: auto;
 }
 </style>{% endblock %}
 
 {% block content %}
-<div class="container center" id="teamSelector">
-    <div id="roomTeams">
-    </div>
-     <div class="overflow-container" id="teamsList">
-    </div>
+<div class="container tab-content">
+    <div class="container tab-pane fade show active" id="teamsDiv">
+        <h1 class="center">Assign Teams</h1>
+        <div class="container center" id="teamSelector">
+            <div id="roomTeams">
+                <div class="drop-zone"id="Team A">
+                    <h3>Team A</h3>
+                    <div class="droppable" ondrop="drop(event)" ondragover="allowDrop(event)"><h1>Add Team Here</h1></div>
 
+                </div>
+                <div class="drop-zone"id="Team B">
+                    <h3>Team B</h3>
+                    <div class="droppable" ondrop="drop(event)" ondragover="allowDrop(event)"><h1>Add Team Here</h1></div>
+                </div>
+                <div class="drop-zone"id="Team C">
+                    <h3>Team C</h3>
+                    <div class="droppable" ondrop="drop(event)" ondragover="allowDrop(event)"><h1>Add Team Here</h1></div>
+                </div>
+                <div class="drop-zone"id="Team D">
+                    <h3>Team D</h3>  
+                    <div class="droppable" ondrop="drop(event)" ondragover="allowDrop(event)"><h1>Add Team Here</h1></div>
+        
+                </div>
+
+            </div>
+            <div class="overflow-container" id="teamsList">
+                <h1>Teams</h1>
+            </div>  
+        </div>
+    </div>
+    <div  class="container tab-pane fade" id="QuestionHolder">
+        <div class="tossup-header">
+            <h1 id="questionNum">Question: #1</h1>
+            <div class="arrows">
+                <button name="task" id="back" class="arrow-left" ></button>
+                <button name="task" id="advance" class="arrow-right"></button>
+            </div>
+        </div>
+        <div class="result-holder">
+            <div class="toss-up">
+                <h2>Tossup: </h2>
+                <select class="form-select" id="teamLetter" >
+                    <option value="0">None</option>
+                    <option value="1">A</option>
+                    <option value="2">B</option>
+                    <option value="3">C</option>
+                    <option value="4">D</option>
+                </select>
+                <select class="form-select"id="teamMember" >
+                    <option value="1">1</option>
+                    <option value="2">2</option>
+                    <option value="3">3</option>
+                    <option value="4">4</option>
+                </select>
+            </div>
+            <div class="Bonus">
+                <h2>Bonus #1: </h2>
+                <input id="bonus1" type="checkbox" >
+                    </div>
+            <div class="Bonus">
+                <h2 for="">Bonus #2: </h2>
+                <input id="bonus2" type="checkbox" >
+            </div>
+        </div>
+    </div>  
 </div>
+
+
+<ul class="nav nav-tabs " id="eventTab" role="tablist">
+    <li class="nav-item" role="presentation">
+        <button class="nav-link active" id="selectTeam-tab" data-bs-toggle="tab" data-bs-target="#teamsDiv" type="button" role="tab" aria-selected="true">Select Teams</button>
+    </li>
+     <li class="nav-item" role="presentation">
+        <button class="nav-link " id="scorekeep-tab" data-bs-toggle="tab" data-bs-target="#QuestionHolder" type="button" role="tab"  aria-selected="true">ScoreKeep</button>
+    </li>
+</ul>
+
 
 {% endblock %}

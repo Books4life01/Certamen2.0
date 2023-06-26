@@ -106,6 +106,13 @@ class Room(db.Model):
     superTournamentKey = db.Column(db.String(8), db.ForeignKey('tournament.tournamentKey'))
     #name of the room
     roomName = db.Column(db.String(200), unique=False)
+
+    #Questions Results in the room
+    results = db.relationship('Result', lazy=True, backref='room')
+
+    #active Question Number
+    currentQuestion = db.Column(db.Integer, unique=False, default=1)    
+
     
 
 
@@ -116,6 +123,18 @@ class Room(db.Model):
     teamB = db.Column(db.Integer, db.ForeignKey('team.teamId'), nullable=True)
     teamC = db.Column(db.Integer, db.ForeignKey('team.teamId'), nullable=True)
     teamD = db.Column(db.Integer, db.ForeignKey('team.teamId'), nullable=True)
+
+    #return the selectedTeams in the room
+    def getTeams(self):
+        return {"teams":(self.teamA, self.teamB, self.teamC, self.teamD)}
+    #get Results in the room
+    def getResults(self):
+        return [result.serialize for result in self.results]
+    def addResult(self, teamLetter, playerNumber, questionNumber, tossupAchieved, bonus1Achieved, bonus2Achieved):
+        result = Result(teamLetter=teamLetter, playerNumber=playerNumber, questionNumber=questionNumber, tossup=tossupAchieved, bonus1=bonus1Achieved, bonus2=bonus2Achieved)
+        db.session.add(result)
+        self.results.append(result)
+        db.session.commit()
 
     #@property is used to make a function act like a variable
     @property
@@ -231,4 +250,43 @@ class Team(db.Model):
             while len(key) < 8:
                 key += values[random.randint(0, len(values) - 1)]
         return key
+    
+class Result(db.Model):
+    #id of the result
+    resultId = db.Column(db.Integer, primary_key=True, unique=True)
+    #team that got the question right: Team ABCorD
+    teamLetter = db.Column(db.String(1), unique=False)
+    #player that got the question right: Player 1, 2, 3, or 4
+    playerNumber = db.Column(db.String(1), unique=False)
+    #room that the question was in
+    roomKey = db.Column(db.Integer, db.ForeignKey('room.roomKey'))
+
+    #QuestionNumber
+    questionNumber = db.Column(db.Integer, unique=False)
+    
+    #tossup achieved?
+    tossup = db.Column(db.Boolean, unique=False)
+    #bonuses achieved?
+    bonus1 = db.Column(db.Boolean, unique=False)
+    bonus2 = db.Column(db.Boolean, unique=False)
+
+    #calculate the total points
+    @property
+    def totalPoints(self):
+        return 10 if self.tossup else 0 + 5 if self.bonus1 else 0 + 5 if self.bonus2 else 0
+    #serialize the result object by converting it to a dictionary; we do this so we can send it as a json object
+    @property
+    def serialize(self):
+        return {
+            'resultId': self.resultId,
+            'teamCorrectLetter': self.teamLetter,
+            'playerCorrectNumber': self.playerNumber,
+            'roomKey': self.roomKey,
+            'tossup': self.tossup,
+            'bonus1': self.bonus1,
+            'bonus2': self.bonus2,
+            'totalPoints': self.totalPoints
+        }
+
+
     
