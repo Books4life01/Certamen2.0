@@ -18,7 +18,6 @@
     socket.on("tournTeamsUpdate", (data) => {
         let teamsContainer = $("#teamsList");
         data.forEach((team) => {
-            console.log(team);
             let teamDiv = $("<div class='team'></div>");
             let teamName = $("<h4></h4>").text(team.teamName);
             teamDiv.append(teamName);
@@ -33,15 +32,12 @@
             teamsContainer.append(teamDiv);
 
         });
-        console.log(data);
     });
     socket.on("roomTeamsUpdate", (data) =>{
-        console.log(data)
         let teams = data.teams;
         let droppableZones = document.getElementsByClassName("drop-zone");
         for(let i = 0; i<4; i++){
             let teamKey = teams[i];
-            console.log("teamKey:", teamKey);
             if(teamKey != "" && teamKey != null){
                 let teamDiv = document.getElementById(teamKey);
                 teamDiv.classList.add("selectedTeam");
@@ -49,14 +45,16 @@
                 droppableZones[i].children[1].appendChild(teamDiv);
             }
         }
-
     });
-    socket.on("roomResultUpdate", (data) =>{
+    socket.on("roomResultsUpdate", (data) =>{
+
+        console.log("Data Recieved from Server")
+        console.log(data)
         curQuestion = data.curQuestion;
         results = data.resultList;
         //update the question number
-        $("#questionNumber").text(curQuestion);
-        resetResults();
+        $("#questionNum").text("Question #" + curQuestion);
+        if(results.length >= curQuestion)resetResults();
         
     });
     socket.on("disconnect", () => {
@@ -84,7 +82,7 @@
             //update the result data from current question and signal we are moving on to the next question
             updateResultData(curQuestion+1);
             curQuestion++;
-            $("#questionNum").text(curQuestion);
+            $("#questionNum").text("Question #" + curQuestion);
             resetResults();
 
         });
@@ -92,7 +90,7 @@
             //update the result data from current question and signal we are moving on to the next question
             updateResultData(curQuestion-1);
             curQuestion--;
-            $("#questionNum").text(curQuestion);
+            $("#questionNum").text("Question #" + curQuestion);
             resetResults();
         });
     });
@@ -106,16 +104,17 @@
             if(results.length < roomCurQuestion) results.push({
                 "teamLetter": teamLetter,
                 "teamMember": teamMember, 
+                "questionNum": curQuestion,
                 "tossup":tossup, 
                 "bonus1":bonus1,
                 "bonus2":bonus2
             })
             else{
-                results[roomCurQuestion-1].teamLetter = teamLetter;
-                results[roomCurQuestion-1].teamMember = teamMember;
-                results[roomCurQuestion-1].tossup = tossup;
-                results[roomCurQuestion-1].bonus1 = bonus1;
-                results[roomCurQuestion-1].bonus2 = bonus2;
+                results[curQuestion-1].teamLetter = teamLetter;
+                results[curQuestion-1].teamMember = teamMember;
+                results[curQuestion-1].tossup = tossup;
+                results[curQuestion-1].bonus1 = bonus1;
+                results[curQuestion-1].bonus2 = bonus2;
 
             }
             out = {
@@ -128,16 +127,19 @@
                 "bonus1":bonus1,
                 "bonus2":bonus2
             }
+            console.log("Saving");
             console.log(out);
             socket.emit("roomResultUpdate", data = out);
     }
     function resetResults(){
         //update current question with resultData  ofill in default values'
+        console.log(results)
         let resultData = results[curQuestion-1];
+        console.log("Result Data Reset" )
         console.log(resultData)
 
-        $("#teamLetter").selectedIndex = parseInt(resultData.teamLetter);
-        $("teamMember").selectedIndex = parseInt(resultData.teamMember);
+        $("#teamLetter").prop("selectedIndex", parseInt(resultData.teamLetter));
+        $("#teamMember").prop("selectedIndex",parseInt(resultData.playerNumber)-1);
         $("#bonus1").prop("checked", resultData.bonus1);
         $("#bonus2").prop("checked", resultData.bonus2);
     }

@@ -147,7 +147,7 @@ def createSocketServer(app):
             room.results[questionNum-1].bonus1 = bonus1
             room.results[questionNum-1].bonus2 = bonus2
             room.results[questionNum-1].teamLetter = teamLetter
-            room.results[questionNum-1].playerNum = playerNum
+            room.results[questionNum-1].playerNumber = playerNum
             room.results[questionNum-1].questionNum = questionNum
         db.session.commit()
 

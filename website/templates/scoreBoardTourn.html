@@ -54,7 +54,24 @@
         $("#addItem").click(() => {
             $("#addRoomModal").modal("show");
         });
-        $("[data-toggle='tooltip']").tooltip();
+        $('#deleteTourn').click(() =>{
+            //show warning modal
+            $("#deleteTournWarning").modal("show");
+        });
+        $('#deleteTournFinal').click(()=>{
+            fetch("/host/manage/tourn?tournKey={{tournKey}}",{
+                method: "DELETE"
+            })
+            .then((res)=>{
+                if(res.status == 200){
+                    window.location.href = "/host/manage";
+                }
+            });
+            
+        });
+        $('[data-toggle="tooltip"]').tooltip({
+            placement: 'top'
+        });
 
     });
     
@@ -72,6 +89,22 @@
     width:100%;
     border-bottom: 1px solid var(--secondary-color);
 }
+.warning-content>*, .warning-content{
+    background-color: red;
+    border: none;
+}
+.warning-body{
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+}
+.modal-hexagon {
+      width: 500px;
+      height: 500px;
+    clip-path: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%);
+    }
+
 .nav-tabs{
     border:none;
 }
@@ -98,7 +131,7 @@ label{
     right:2%;
 }
 .overflow-container{
-    max-height: 200px;
+    max-height: 150px;
     overflow-y: scroll;
     border: 1px solid blue;
 }
@@ -126,7 +159,9 @@ label{
     text-align: center;
     white-space: nowrap;
 }
-
+body{
+    overflow: auto;
+}
 
 #roomsContainer, #teamsContainer{
    background-color: var(--secondary-color);
@@ -140,8 +175,14 @@ form{
 }
 
 i{
-    padding-bottom:1%;
+    padding:1%;
 }
+#actionBar{
+    display:flex;
+    justify-content: center;
+    gap:1%;
+}
+
 </style>{%endblock%}
 {%block content%}
 <h1>ScoreBoard TOURN {{tournKey}}</h1>
@@ -217,10 +258,29 @@ i{
     </div>
 </div>
 
+<!--Delete Tournament Dialog-->
+<div class="modal fade" tabindex="-1" id="deleteTournWarning">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content warning-content modal-hexagon center">
+            <div class="modal-header"></div>
+            <div class="modal-body warning-body">
+                <h1>Are you sure you want to delete this Tournament?</h1>
+                <h6>This action cannot be undone</h3>
+                
+                <i class="fa-solid fa-trash fa-2xl" id="deleteTournFinal"style="color: #ffffff; margin-top:15%; font-size:8em;"></i>
+
+            </div>
+            <div class="modal-footer"></div>
+        </div>
+    </div>
+</div>
+
 
 <nav class="navbar fixed-bottom">
-    <div class="container-fluid">
-        <i class="fa-solid fa-plus fa-2xl" id="addItem" data-toggle="tooltip" title="Create new Room or Tournament"></i>
+    <div class="container-fluid" id="actionBar">
+        <i class="fa-solid fa-plus fa-2xl" id="addItem" data-toggle="tooltip" data-placement="top" title="Create new Room or Tournament"></i>
+        <i class="fa-solid fa-trash" id="deleteTourn" data-toggle="tooltip" data-placement="top" title="Delete this Tournament"></i>
+        
     </div>
 
 </nav>

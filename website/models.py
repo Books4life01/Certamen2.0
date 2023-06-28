@@ -18,6 +18,26 @@ class Player(db.Model):
             return True
         else:
             return False
+    #create a new player
+    @staticmethod
+    def createPlayer(playerName, tournamentKey):
+        key = Player.generatePlayerKey()
+        player = Player(name=playerName, superTournament=tournamentKey, playerKey=key)
+        return player
+    #generate a key for the player
+    @staticmethod
+    def generateKey():
+        key = ""
+        values = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789"
+        #Create a key while the key is empty or the key already exists
+        while len(key) ==0 or Player.exists(key):
+            key = "" #reset key
+            #create a key of 8 characters using lower and upper case letters and numbers
+            #62^8=218,340,105,584,896 possible keys a lot
+            while len(key) < 8:
+                key += values[random.randint(0, len(values) - 1)]
+        return key
+    
 
 class Tournament(db.Model):
     #id is used to identify the tournament
@@ -27,11 +47,11 @@ class Tournament(db.Model):
     #name of the tournament
     name = db.Column(db.String(200), unique=False)
     #players in the tournament
-    players = db.relationship('Player', lazy=True)
-    #rooms in the tournament
-    rooms = db.relationship('Room', lazy=True, backref='tournament')
+    players = db.relationship('Player', lazy=True, backref='tournament', cascade="all, delete-orphan")#cascade deletes all objects when tournament is deleted; orphan only deletes if objecct doesnt belong to another tournament
+       #rooms in the tournament
+    rooms = db.relationship('Room', lazy=True, backref='tournament', cascade="all, delete-orphan")
     #teams in the tournament
-    teams = db.relationship('Team', lazy=True, backref='tournament')
+    teams = db.relationship('Team', lazy=True, backref='tournament', cascade="all, delete-orphan")
     #Live means the tournament is hosting a virtual game raher than being used as a scoring tool
     liveTourn = db.Column(db.Boolean, unique=False)
 
@@ -48,6 +68,12 @@ class Tournament(db.Model):
         self.teams.append(team)
         db.session.commit()
         return team.teamKey
+    #add a player to the tournament
+    def createPlayer(self, playerName):
+        player = Player.createPlayer(playerName, self.tournamentKey)
+        self.players.append(player)
+        db.session.commit()
+        return player.playerKey
     #get a tournaments list of teams
     def getTeams(self):
         return [team.serialize for team in self.teams]
@@ -57,6 +83,11 @@ class Tournament(db.Model):
     #get a tournaments list of players
     def getPlayers(self):
         return [player.serialize for player in self.players]
+    
+    #delete a tournament
+    def delete(self):
+        db.session.delete(self)
+        db.session.commit()
     
     
     #__________STATIC_____________
@@ -279,8 +310,9 @@ class Result(db.Model):
     def serialize(self):
         return {
             'resultId': self.resultId,
-            'teamCorrectLetter': self.teamLetter,
-            'playerCorrectNumber': self.playerNumber,
+            'questionNumber': self.questionNumber,
+            'teamLetter': self.teamLetter,
+            'playerNumber': self.playerNumber,
             'roomKey': self.roomKey,
             'tossup': self.tossup,
             'bonus1': self.bonus1,

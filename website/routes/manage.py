@@ -43,6 +43,14 @@ def createTeam():
     tourn = db.session.query(Tournament).filter_by(tournamentKey=tournKey).first()
     teamKey = tourn.createTeam(teamName)
     return redirect(url_for('manage.tourn', tournKey=tournKey))
+@manage.route('/tourn', methods=['DELETE'])
+def deleteTourn():
+    print("HERE")
+    tournKey = request.args.get('tournKey')
+    tourn = db.session.query(Tournament).filter_by(tournamentKey=tournKey).first()
+    tourn.delete()
+    return ""
+
     
      
 
