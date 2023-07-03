@@ -6,7 +6,7 @@
     let curQuestion = 1;
     let results = [];
     //set up client socket
-    const socket = io("http://192.168.4.245:8080");
+    const socket = io("http://159.203.180.66:8080");
     socket.on("connect", () => {
         console.log("connected");
         //Reqeust Data Refresh from the server
