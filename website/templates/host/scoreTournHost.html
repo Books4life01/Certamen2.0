@@ -1,7 +1,7 @@
-{%extends "base.html"%}
+{%extends "home/base.html"%}
 {%block script%}<script>
     //set up client socket
-    const socket = io("http://192.168.4.127:8080");
+    const socket = io("http://192.168.4.245:8080");
     socket.on("connect", () => {
         console.log("connected");
         //Reqeust Data Refresh from the server
@@ -15,31 +15,37 @@
         data.forEach((room) => {
             console.log(room);
             let roomDiv = $("<div class='room'></div>");
-            let roomName = $("<h4></h4>").text(room.roomName);
+            let roomName = $("<h4></h4>").text(room.name);
             let manageRoomBtn = $("<button class='btn btn-primary editRoom' ></button>").text("Manage Room");
             manageRoomBtn.click(() => {
-               window.location.href = "/host/manage/room?roomKey=" + room.roomKey;
+               window.location.href = "/host/manage/room?roomKey=" + room.privateKey;
             });
-            let roomKey = $("<h4></h4>").text(room.roomKey);
+            let roomPrivateKey = $("<h4></h4>").text(room.privateKey);
+            let roomPublicKey = $("<h4></h4>").text(room.publicKey);
             roomDiv.append(roomName);
             roomDiv.append(manageRoomBtn);
-            roomDiv.append(roomKey);
+            roomDiv.append(roomPrivateKey);
+            roomDiv.append(roomPublicKey);
             roomsContainer.append(roomDiv);
 
         });
 
     });
+
     socket.on("teamsUpdate", (data) => {
         let teamsContainer = $("#teamsContainer");
         data.forEach((team) => {
             console.log(team);
             let teamDiv = $("<div class='team'></div>");
-            let teamName = $("<h4></h4>").text(team.teamName);
+            let teamName = $("<h4></h4>").text(team.name);
             let manageTeamBtn = $("<button class='btn btn-primary'></button>").text("Manage Team");
-            let teamKey = $("<h4></h4>").text(team.teamKey);
+            let teamPrivateKey = $("<h4></h4>").text(team.privateKey);
+            let teamPublicKey = $("<h4></h4>").text(team.publicKey);
+
             teamDiv.append(teamName);
             teamDiv.append(manageTeamBtn);
-            teamDiv.append(teamKey);
+            teamDiv.append(teamPrivateKey);
+            teamDiv.append(teamPublicKey);
             teamsContainer.append(teamDiv);
 
         });
@@ -189,13 +195,13 @@ i{
 <div id="roomsInfo" class="center">
     <h1 class="center">Rooms:</h1>
     <div id="roomsContainer" class="overflow-container center">
-        <div class="room" ><h6>Room Name</h6><h6>Edit Room</h6><h6>Room Key</h6></div>
+        <div class="room" ><h6>Room Name</h6><h6>Edit Room</h6><h6>Private Key</h6><h6>Public Key</h6></div>
     </div>
 </div>
 <div class="center" id="teamsInfo">
     <h1 class="center">Teams:</h1>
     <div id="teamsContainer" class="overflow-container center">
-        <div class="team" ><h6>Team Name</h6><h6>Edit Team</h6><h6>Team Key</h6></div>
+        <div class="team" ><h6>Team Name</h6><h6>Edit Team</h6><h6>Private Key</h6><h6>Public Key</h6>/div>
     </div>
 </div>
 <div class="modal fade" tabindex="-1" id="addRoomModal">
@@ -241,7 +247,7 @@ i{
                         <form method="POST" action="/host/manage/tourn/player">
                             <input type="hidden" name="tournKey" value="{{tournKey}}">
                             <label for="playerNameInput">Enter Player Name:</label>
-                            <input type="text" name="playerName" id="playerNameInput" placeholder="....">
+                            <input type="text" name="name" id="playerNameInput" placeholder="....">
                             <input type="submit" value="Create Player">
 
                         </form>

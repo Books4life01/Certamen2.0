@@ -1,4 +1,4 @@
-{%extends "base.html"%}
+{%extends "home/base.html"%}
 {%block title%}Play{%endblock%}
 {%block styles%}
 <style>
@@ -8,7 +8,7 @@
 </style>
 {%endblock%}
 {%block script%}<script>
-    window.onload = () =>{//when the page loads(ensure that the checkbox will be loaded in)
+    $("document").ready(() =>{//when the page loads(ensure that the checkbox will be loaded in)
         let hasPlayerKey = document.getElementById("hasPlayerKey")
         hasPlayerKey.addEventListener("click", function(){
             let playerKeyDiv = document.getElementById("playerKeyDiv");
@@ -33,7 +33,7 @@
 
             }
         });
-};
+    });
 </script>{%endblock%}
 {%block content%}
 <h1 class = "center">Play Certamen</h1>

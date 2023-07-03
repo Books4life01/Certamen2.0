@@ -6,19 +6,34 @@ manage = Blueprint('manage', __name__)#passing the name of the blueprint and the
 
 @manage.route('/')#this is the route for the host home page
 def home():
-        return render_template("manage.html")
+        return render_template("home/manage.html")
 @manage.route('/tourn')
 def tourn():
-     tournKey = request.args.get('tournKey')
-     isLive = db.session.query(Tournament).filter_by(tournamentKey=tournKey).first().liveTourn
-     if isLive:
-          return render_template("liveTourn.html", tournKey=tournKey)
+     #retrieve tourn private key from request
+     tournPrivateKey = request.args.get('tournKey')
+     tourn = Tournament.getTournByPrivate(tournPrivateKey) 
+     if tourn == None:
+            flash("Invalid Private Tournament Key")
+            return redirect(url_for('manage.home'))
      else:
-            return render_template("scoreBoardTourn.html", tournKey=tournKey)
+        #retrieve object and check if it is a live tournament
+        isLive = tourn.liveTourn
+        if isLive:
+            return render_template("host/liveTournHost.html", tournKey=tournPrivateKey)
+        else:
+            return render_template("host/scoreTournHost.html", tournKey=tournPrivateKey)
 @manage.route('/room')
 def room():
-        roomKey = request.args.get('roomKey')
-        return render_template("scoreRoom.html", roomKey=roomKey)
+        roomPrivateKey = request.args.get('roomKey')
+        room = Room.getRoomByPrivate(roomPrivateKey)
+        if room == None:
+            flash("Invalid Private Room Key")
+            return redirect(url_for('manage.home'))
+        else:
+            if room.isLiveRoom:
+                return render_template("host/liveRoomHost.html", roomKey=roomPrivateKey)
+            else:
+                return render_template("host/scoreRoomHost.html", roomKey=roomPrivateKey)
 
      
 
@@ -26,28 +41,28 @@ def room():
 @manage.route('/tourn/room', methods=['POST'])
 def createRoom():
     #get the tournament key from the request
-    tournKey = request.form['tournKey']
+    tournPrivateKey = request.form['tournKey']
     #get the room name from the request
     roomName = request.form['roomName']
     #creates a room and returns the room key
-    tourn = db.session.query(Tournament).filter_by(tournamentKey=tournKey).first()
-    roomKey = tourn.createRoom(roomName)
-    return redirect(url_for('manage.tourn', tournKey=tournKey))
+    tourn = Tournament.getTournByPrivate(tournPrivateKey)
+    tourn.createRoom(roomName)
+    return redirect(url_for('manage.tourn', tournKey=tournPrivateKey))
 @manage.route('/tourn/team', methods=['POST'])
 def createTeam():
     #get the tournament key from the request
-    tournKey = request.form['tournKey']
+    tournPrivateKey = request.form['tournKey']
     #get the team name from the request
-    teamName = request.form['teamName']
+    name = request.form['teamName']
     #creates a team and returns the team key
-    tourn = db.session.query(Tournament).filter_by(tournamentKey=tournKey).first()
-    teamKey = tourn.createTeam(teamName)
-    return redirect(url_for('manage.tourn', tournKey=tournKey))
+    tourn = Tournament.getTournByPrivate(tournPrivateKey)
+    tourn.createTeam(name)
+    return redirect(url_for('manage.tourn', tournKey=tournPrivateKey))
+#delete routes
 @manage.route('/tourn', methods=['DELETE'])
 def deleteTourn():
-    print("HERE")
-    tournKey = request.args.get('tournKey')
-    tourn = db.session.query(Tournament).filter_by(tournamentKey=tournKey).first()
+    tournPrivateKey = request.args.get('tournKey')
+    tourn = Tournament.getTournByPrivate(tournPrivateKey)
     tourn.delete()
     return ""
 
@@ -60,10 +75,10 @@ def deleteTourn():
 #called from manage.html
 @manage.route('/authenticateTourn')
 def authenticateToutn():
-    tournKey = request.args.get('tournKey')#Retrieve Tournament Key from rewuest
+    tournPrivateKey = request.args.get('tournKey')#Retrieve Tournament Key from request
 
-    if Tournament.exists(tournKey):
-        return redirect(url_for('manage.tourn', tournKey=tournKey))
+    if Tournament.getTournByPrivate(tournPrivateKey):
+        return redirect(url_for('manage.tourn', tournKey=tournPrivateKey))
     else:
         flash("Invalid Tournament Key")
         return redirect(url_for('manage.home'))

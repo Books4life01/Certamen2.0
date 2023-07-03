@@ -1,0 +1,60 @@
+{%extends "home/base.html"%}
+{%block script%}<script>
+    const socket = io.connect('http://192.168.4.127:8080');
+
+    socket.on('connect', function(){
+        emit('tournDataRefreshRequest', data = {"tournKey": {{ tournKey|tojson }}});
+    });
+    socket.on('question-Update', function(data){
+        $(".Question").html(data);
+    });
+    $("document").ready(function(){
+        //Toast all flashed messages
+        {% with messages = get_flashed_messages() %}
+            {% if messages %}
+                {% for message in messages %}
+                   //create a toast using bootstrap disapearing after 30 seconds and absolute positioned upper right
+                    var toast = $('<div class="toast" role="alert"  data-delay="30000" style="position: absolute; width:30%; height: 20%; background-color:var(--primary-color); color:white; top:50%; right:50%;"></div');
+                    toast.text("ALERT{{ message }}");
+                    //add the toast to the document
+                    $("body").append(toast);
+                    //activate the toast
+                    toast.toast('show');
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+    });
+
+</script>{%endblock%}
+{%block styles%}<style>
+
+    .slowText{
+        animation: type 5s steps(20);
+    }
+    @keyframes type{
+        from{width: 0;}
+        to{width: 100%;}
+    }
+    #toast-container{
+        top: 0;
+        right: 0;
+        color: #ffffff;
+    }
+    .clear{
+        background-color: green;
+        color: #ffffff;
+        opacity: 1;
+    }
+    
+</style>{%endblock%}
+
+
+{%block content%}
+<h1>LIVE TOURN CLIENT</h1>
+
+<!-- Space for host to send out a question to the players-->
+<div class="Question">
+    What is the third emporero of the holy roman empire founded in the 1200th century and then there were non is a great book and im just rambling and test
+</div>
+
+{%endblock%}

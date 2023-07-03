@@ -1,4 +1,4 @@
-{% extends "base.html"%}
+{% extends "home/base.html"%}
 {% block title %}Room{% endblock %}
 {%block script%}<script>
 
@@ -6,7 +6,7 @@
     let curQuestion = 1;
     let results = [];
     //set up client socket
-    const socket = io("http://192.168.4.127:8080");
+    const socket = io("http://192.168.4.245:8080");
     socket.on("connect", () => {
         console.log("connected");
         //Reqeust Data Refresh from the server
@@ -19,14 +19,16 @@
         let teamsContainer = $("#teamsList");
         data.forEach((team) => {
             let teamDiv = $("<div class='team'></div>");
-            let teamName = $("<h4></h4>").text(team.teamName);
+            let teamName = $("<h4></h4>").text(team.name);
             teamDiv.append(teamName);
             teamDiv.addClass("team");
             teamDiv.attr("draggable", true);
-            teamDiv.attr("id", team.teamKey);
+            teamDiv.attr("id", team.privateKey);
             //create event listeners for draag start and end to add classes to the element being dragged
             teamDiv.on("dragstart", () =>teamDiv.addClass("dragging"));
-            teamDiv.on("dragend", () =>teamDiv.removeClass("dragging"));
+            teamDiv.on("dragend", (event) =>{
+                teamDiv.removeClass("dragging")
+            });
             teamDiv.on("dragstart", () =>drag(event));
             
             teamsContainer.append(teamDiv);
@@ -48,13 +50,13 @@
     });
     socket.on("roomResultsUpdate", (data) =>{
 
-        console.log("Data Recieved from Server")
+        console.log(" Result Data Recieved from Server")
         console.log(data)
         curQuestion = data.curQuestion;
         results = data.resultList;
         //update the question number
         $("#questionNum").text("Question #" + curQuestion);
-        if(results.length >= curQuestion)resetResults();
+        resetResults();
         
     });
     socket.on("disconnect", () => {
@@ -66,7 +68,7 @@
         $("#teamLetter").on("change", () => {
            updateResultData();
         });
-        $("#teamMember").on("change", () => {
+        $("#playerNum").on("change", () => {
             updateResultData();
         });
         $("#tossup").on("change", () => {
@@ -79,70 +81,104 @@
             updateResultData();
         });
         $("#advance").on("click", () => {
-            //update the result data from current question and signal we are moving on to the next question
-            updateResultData(curQuestion+1);
+            //update the result data from current question 
+            updateResultData();
+
+            //advance a question
             curQuestion++;
+            updateCurQuestion();
             $("#questionNum").text("Question #" + curQuestion);
+
+            //load preset results for this new question if they exist
             resetResults();
 
         });
         $("#back").on("click", () => {
-            //update the result data from current question and signal we are moving on to the next question
-            updateResultData(curQuestion-1);
-            curQuestion--;
-            $("#questionNum").text("Question #" + curQuestion);
-            resetResults();
+            if(curQuestion > 1){
+            
+                //update the result data from current question
+                updateResultData();
+
+                //back up a question
+                curQuestion--;
+                updateCurQuestion();
+                $("#questionNum").text("Question #" + curQuestion);
+
+                //load preset results for this new question if they exist
+                resetResults();
+            }
         });
     });
 
-    function updateResultData(roomCurQuestion=curQuestion){
-            let teamLetter = $("#teamLetter").val();
-            let teamMember = $("#teamMember").val();
-            let tossup = teamLetter == "0" ? false : true;
-            let bonus1 = $("#bonus1").prop("checked");
-            let bonus2 = $("#bonus2").prop("checked");
-            if(results.length < roomCurQuestion) results.push({
-                "teamLetter": teamLetter,
-                "teamMember": teamMember, 
-                "questionNum": curQuestion,
-                "tossup":tossup, 
-                "bonus1":bonus1,
-                "bonus2":bonus2
-            })
-            else{
-                results[curQuestion-1].teamLetter = teamLetter;
-                results[curQuestion-1].teamMember = teamMember;
-                results[curQuestion-1].tossup = tossup;
-                results[curQuestion-1].bonus1 = bonus1;
-                results[curQuestion-1].bonus2 = bonus2;
+    /**
+        * Updates the results array with the current results and sends the data to the server
+        * @param {int} roomCurQuestion the current question of the room
+    **/
+    function updateResultData(){
+        //create data object to send to server
+        out = {}
 
-            }
-            out = {
-                "roomKey": {{ roomKey|tojson }},
-                "roomCurQuestion": roomCurQuestion,
-                "questionNum": curQuestion,
-                "teamLetter": teamLetter,
-                "teamMember": teamMember, 
-                "tossup":tossup, 
-                "bonus1":bonus1,
-                "bonus2":bonus2
-            }
-            console.log("Saving");
-            console.log(out);
-            socket.emit("roomResultUpdate", data = out);
+        //Retrieve the current results from the form and store them in the results array, and in the data object
+        out['teamLetter']= results[curQuestion-1].teamLetter = $("#teamLetter").val();
+        out['playerNum'] = results[curQuestion-1].playerNum = $("#playerNum").val();
+        out['tossup']= results[curQuestion-1].tossup = teamLetter == "0" ? false : true;
+        out['bonus1']= results[curQuestion-1].bonus1 = $("#bonus1").prop("checked");
+        out['bonus2']= results[curQuestion-1].bonus2 = $("#bonus2").prop("checked");
+        out['roomKey'] = {{ roomKey|tojson }};
+        out['questionNum'] = curQuestion;
+       
+        console.log("Saving");
+        console.log(out);
+        socket.emit("roomResultUpdate", data = out);
     }
+    /**
+        * Updates the current question on the server database
+    **/
+    function updateCurQuestion(){
+        //update the current question on the server
+        socket.emit("roomCurQuestionUpdate", data = {
+            "roomKey": {{ roomKey|tojson }},
+            "curQuestion": curQuestion
+        });
+    }
+    /**
+    * Resets the results form to the values stored in the results array or to default values if no results exist for this question
+    **/
     function resetResults(){
-        //update current question with resultData  ofill in default values'
-        console.log(results)
-        let resultData = results[curQuestion-1];
-        console.log("Result Data Reset" )
-        console.log(resultData)
+        console.log("Resetting Results")
 
-        $("#teamLetter").prop("selectedIndex", parseInt(resultData.teamLetter));
-        $("#teamMember").prop("selectedIndex",parseInt(resultData.playerNumber)-1);
-        $("#bonus1").prop("checked", resultData.bonus1);
-        $("#bonus2").prop("checked", resultData.bonus2);
+        //Default Values if no results exist for this question
+        if(results.length < curQuestion){
+            console.log("No Results for this question; Creating default")
+
+            $("#teamLetter").prop("selectedIndex", 0);
+            $("#playerNum").prop("selectedIndex",0);
+            $("#bonus1").prop("checked", false);
+            $("#bonus2").prop("checked", false);
+            //and create a new result object for this question
+            results.push({
+                "teamLetter": "0",
+                "playerNum": "0", 
+                "questionNum": curQuestion,
+                "tossup":false, 
+                "bonus1":false,
+                "bonus2":false
+            })
+
+        }
+        //otherwise load the results from the results array
+        else{
+            let resultData = results[curQuestion-1];
+          
+            $("#teamLetter").prop("selectedIndex", parseInt(resultData.teamLetter));
+            $("#playerNum").prop("selectedIndex",parseInt(resultData.playerNum)-1);
+            $("#bonus1").prop("checked", resultData.bonus1);
+            $("#bonus2").prop("checked", resultData.bonus2);
+        }
+        resultData = results[curQuestion-1];
+        console.log(resultData)
     }
+        
 
     function drag(event){
         event.dataTransfer.setData("text", event.target.id);
@@ -151,13 +187,13 @@
     function drop(event){
         event.preventDefault();//prevents default action of dropping which is to block the drop
         var data = event.dataTransfer.getData("text");//retrieves the id of the element to drop  sent by the drag funcion
-        console.log(data)
         //ensure the target is a droppable element and if it isnt retrive its parent element
         let target = event.target;
-        while(!target.classList.contains("droppable")){
-            console.log("target:", target);
+        console.log(target)
+        while(!target.classList.contains("droppable") && !target.classList.contains("overflow-container")){
             target = target.parentElement;
         }
+        console.log(target)
 
         //remove all children from the target element and if the child is draggable reappend it to the teams list
         Array.from(target.children).forEach((child) => {
@@ -170,13 +206,23 @@
 
         //add the selected team class to the element being dropped
         let elem = document.getElementById(data);
-        elem.classList.add("selectedTeam");
+        let parent = elem.parentElement;
+
+        if(target.classList.contains("droppable"))elem.classList.add("selectedTeam");
+        else elem.classList.remove("selectedTeam");
         
         //append the element to the drop target
         target.appendChild(elem);
+        //if parent has droppable class 
+        if(parent.classList.contains("droppable")){
+           //add the "Add Team Here" text back
+           let h1 = document.createElement("h1");
+              h1.innerHTML = "Add Team Here";
+           parent.appendChild(h1);
+        }
 
         //update the server with the new team assignments
-        let teamA = document.getElementById("Team A").children[1].children[0].id;
+        let teamA = document.getElementById("Team A").children[1].children[0].id ;
         let teamB = document.getElementById("Team B").children[1].children[0].id;
         let teamC = document.getElementById("Team C").children[1].children[0].id;
         let teamD = document.getElementById("Team D").children[1].children[0].id;
@@ -375,7 +421,7 @@ body{
                 </div>
 
             </div>
-            <div class="overflow-container" id="teamsList">
+            <div class="overflow-container" ondrop="drop(event)" ondragover="allowDrop(event)" id="teamsList">
                 <h1>Teams</h1>
             </div>  
         </div>
@@ -398,7 +444,7 @@ body{
                     <option value="3">C</option>
                     <option value="4">D</option>
                 </select>
-                <select class="form-select"id="teamMember" >
+                <select class="form-select"id="playerNum" >
                     <option value="1">1</option>
                     <option value="2">2</option>
                     <option value="3">3</option>

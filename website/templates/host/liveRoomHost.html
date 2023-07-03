@@ -1,0 +1,37 @@
+{%extends "home/base.html"%}
+{%block script%}<script>
+    const socket = io.connect('http://192.168.4.127:8080');
+
+    socket.on('connect', function(){
+        emit('roomHostConnect', data = {"tournKey": {{ tournKey|tojson }}});
+    });
+
+
+
+    $("document").ready(function(){
+        $(".btn-primary").click(function(){
+            socket.emit('sendQuestion', $("#questionInput").val());
+        });
+    });
+</script>{%endblock%}
+{%block styles%}<style>
+    .input-group{
+        text-align: center;
+    }
+    .btn-primary{
+        background-color: var(--quinary-color);
+        border-color: var(--quinary-color);
+    }
+</style>{%endblock%}
+
+
+{%block content%}
+<h1>LIVE TOURN</h1>
+
+<!-- Space for host to send out a question to the players-->
+<div class="input-group">
+    <button class="input-group-text btn btn-primary" id="question-Send">Insert Question</button>
+    <textarea class="form-control" id="questionInput" rows="5"></textarea>
+</div>
+
+{%endblock%}
