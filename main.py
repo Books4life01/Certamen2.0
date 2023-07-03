@@ -10,4 +10,5 @@ socketio = createSocketServer(app)
 if __name__ == "__main__":
     # os.environ['PYTHONDONTWRITEBYTECODE'] = '0'
     # os.system("python -m compileall -b -f -o ./__pycache__ ./")
-    socketio.run(app, debug=True, host=socket.gethostbyname(socket.gethostname()), port=8080)
+    
+    socketio.run(app, debug=True, host="0.0.0.0", port=8080)
