@@ -9,8 +9,21 @@ class Player(db.Model):
     privateKey = db.Column(db.String(8), unique=True)
     name = db.Column(db.String(100), unique=False)
     superTournament = db.Column(db.Integer, db.ForeignKey('tournament.privateKey'))
+    superTeam = db.Column(db.Integer, db.ForeignKey('team.privateKey'))
+
+
 
     #FUNCTIONS
+    @property
+    def serialize(self):
+        return {
+            'publicKey': self.publicKey,
+            'privateKey': self.privateKey,
+            'name': self.name,
+            'superTournament': self.superTournament,
+            'superTeam': self.superTeam
+        }
+
     #see if a player exsists by its key either public or private
     @staticmethod
     def exists(publicKey):
@@ -19,10 +32,10 @@ class Player(db.Model):
         return private != None or public != None
     #create a new player
     @staticmethod
-    def createPlayer(playerName, tournamentKey):
+    def createPlayer(playerName, tournamentKey, teamKey):
         privateKey = Player.generateKey()
         publicKey = Player.generateKey(privateKey)
-        player = Player(name=playerName, superTournament=tournamentKey, publicKey=publicKey, privateKey=privateKey)
+        player = Player(name=playerName, superTournament=tournamentKey, superTeam = teamKey, publicKey=publicKey, privateKey=privateKey)
         return player
     #generate a key for the player ensuring it is unique and not the same as the provided invalid key argumeny
     @staticmethod
@@ -78,14 +91,15 @@ class Tournament(db.Model):
         db.session.commit()
         return team.privateKey
     #add a player to the tournament reutrn the player's private key
-    def createPlayer(self, playerName):
-        player = Player.createPlayer(playerName, self.privateKey)
+    def createPlayer(self, playerName, teamKey):
+        player = Player.createPlayer(playerName, self.privateKey, teamKey)
         self.players.append(player)
         db.session.commit()
         return player.privateKey
     #get a tournaments list of teams
     def getTeams(self):
         return [team.serialize for team in self.teams]
+    
     #get a tournaments list of rooms
     def getRooms(self):
         return [room.serialize for room in self.rooms]
@@ -175,6 +189,11 @@ class Room(db.Model):
     teamB = db.Column(db.Integer, db.ForeignKey('team.privateKey'), nullable=True)
     teamC = db.Column(db.Integer, db.ForeignKey('team.privateKey'), nullable=True)
     teamD = db.Column(db.Integer, db.ForeignKey('team.privateKey'), nullable=True)
+    #players currently live from each team
+    teamAPlayers = db.Column(db.Integer, unique=False, default=0)
+    teamBPlayers = db.Column(db.Integer, unique=False, default=0)
+    teamCPlayers = db.Column(db.Integer, unique=False, default=0)
+    teamDPlayers = db.Column(db.Integer, unique=False, default=0)
 
     #return the selectedTeams in the room
     def getTeams(self):
@@ -187,7 +206,44 @@ class Room(db.Model):
         db.session.add(result)
         self.results.append(result)
         db.session.commit()
-
+    def canCompete(self, playerKey):
+        #retrieve player superTeam
+        player = Player.getPlayer(playerKey)
+        if player == None: return False
+        superTeam = player.superTeam
+        #ensure room isLive
+        if not self.isLive: return False
+        #check if the player's superTeam is in the room
+        return superTeam == self.teamA and self.teamAPlayers < 4 or superTeam == self.teamB and self.teamBPlayers < 4 or superTeam == self.teamC and self.teamCPlayers < 4 or superTeam == self.teamD and self.teamDPlayers < 4
+   #adds a player to the room given a teamKey and increments the number of players in the team
+    def addLivePlayer(self, playerKey):
+        if self.canCompete(playerKey):
+            player = Player.getPlayer(playerKey)
+            superTeam = player.superTeam
+            if superTeam == self.teamA:
+                self.teamAPlayers += 1
+            elif superTeam == self.teamB:
+                self.teamBPlayers += 1
+            elif superTeam == self.teamC:
+                self.teamCPlayers += 1
+            elif superTeam == self.teamD:
+                self.teamDPlayers += 1
+            db.session.commit()
+            return True
+        return False
+    #removes a player from the room given a teamKey and decrements the number of players in the team
+    #eamKey is the private key of the team
+    def removeLivePlayer(self, teamKey):
+        if teamKey == self.teamA and self.teamAPlayers > 0:
+            self.teamAPlayers -= 1
+        elif teamKey == self.teamB and self.teamBPlayers > 0:
+            self.teamBPlayers -= 1
+        elif teamKey == self.teamC and self.teamCPlayers > 0:
+            self.teamCPlayers -= 1
+        elif teamKey == self.teamD and self.teamDPlayers > 0:
+            self.teamDPlayers -= 1
+        db.session.commit()
+        
     #@property is used to make a function act like a variable
     @property
     def isLiveRoom(self):
@@ -205,7 +261,11 @@ class Room(db.Model):
             'teamA': self.teamA,
             'teamB': self.teamB,
             'teamC': self.teamC,
-            'teamD': self.teamD
+            'teamD': self.teamD,
+            'teamAPlayers': self.teamAPlayers,
+            'teamBPlayers': self.teamBPlayers,
+            'teamCPlayers': self.teamCPlayers,
+            'teamDPlayers': self.teamDPlayers,
         }
     #STATIC FUNCTIONS
     #see if a room exsists with either a piblic or private key
@@ -261,12 +321,13 @@ class Team(db.Model):
     #key of the super tournament
     superTournament = db.Column(db.String(8), db.ForeignKey('tournament.privateKey'))
 
-    #Players in the team: Max of 4
+    #official Players in the team: Max of 4
     player1 = db.Column(db.Integer, db.ForeignKey('player.privateKey'))
     player2 = db.Column(db.Integer, db.ForeignKey('player.privateKey'))
     player3 = db.Column(db.Integer, db.ForeignKey('player.privateKey'))
     player4 = db.Column(db.Integer, db.ForeignKey('player.privateKey'))
-
+  
+    players = db.relationship('Player', backref='team', lazy='dynamic', primaryjoin="or_(Team.privateKey==Player.superTeam)")
     #FUNCTIONS
     #serialize the team object by converting it to a dictionary; we do this so we can send it as a json object
     @property
@@ -314,6 +375,12 @@ class Team(db.Model):
             while len(key) < 8:
                 key += values[random.randint(0, len(values) - 1)]
         return key
+    @staticmethod
+    def getTeamByPrivate(privateKey):
+        return db.session.query(Team).filter_by(privateKey=privateKey).first()
+    @staticmethod
+    def getTeamByPublic(publicKey):
+        return db.session.query(Team).filter_by(publicKey=publicKey).first()
     
 class Result(db.Model):
     #id of the result
