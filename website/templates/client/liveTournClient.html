@@ -33,6 +33,9 @@
                 ['teamA', 'teamB', 'teamC', 'teamD'].forEach(team =>{
                     if('{{player['superTeam']}}' == room[team] && room[team+'Players']<4){
                         joinRoomButton.text("COMPETE");
+                        joinRoomButton.click(function(){
+                            window.location.href = "/play/room?roomKey="+room['publicKey']+"&playerKey={{player['privateKey']}}";
+                        });
                     }
                 });
                 //attach the room name and key to the room div
