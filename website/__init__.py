@@ -48,7 +48,7 @@ def createSocketServer(app):
     socketio = SocketIO(app, cors_allowed_origins="*")
 
     #import models
-    from .routes.updateSocket import on_roomResultUpdate, on_teamAssignmentUpdate, on_roomCurQuestionUpdate
+    from .routes.updateSocket import on_roomResultUpdate, on_teamAssignmentUpdate, on_roomCurQuestionUpdate, on_liveQuestionUpdate
     from .routes.refreshSocket import on_roomDataRefreshRequest, on_tournDataRefreshRequest
     from .routes.baseSocket import on_connect, on_disconnect, on_roomClientConnect, on_roomHostConnect
     
@@ -64,6 +64,7 @@ def createSocketServer(app):
     socketio.on_event("teamAssignmentUpdate", on_teamAssignmentUpdate)
     socketio.on_event("roomResultUpdate", on_roomResultUpdate)
     socketio.on_event("roomCurQuestionUpdate", on_roomCurQuestionUpdate)
+    socketio.on_event("liveQuestionUpdate", on_liveQuestionUpdate)
 
 
 

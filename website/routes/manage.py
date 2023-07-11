@@ -65,6 +65,12 @@ def deleteTourn():
     tourn = Tournament.getTournByPrivate(tournPrivateKey)
     tourn.delete()
     return ""
+@manage.route('/room', methods=['DELETE'])
+def deleteRoom():
+    roomPrivateKey = request.args.get('roomKey')
+    room = Room.getRoomByPrivate(roomPrivateKey)
+    room.delete()
+    return ""
 
     
      

@@ -243,6 +243,9 @@ class Room(db.Model):
         elif teamKey == self.teamD and self.teamDPlayers > 0:
             self.teamDPlayers -= 1
         db.session.commit()
+    def delete(self):
+        db.session.delete(self)
+        db.session.commit()
         
     #@property is used to make a function act like a variable
     @property

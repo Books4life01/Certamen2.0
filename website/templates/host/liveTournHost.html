@@ -1,7 +1,8 @@
 {%extends "home/base.html"%}
+{%block title%}Live TournamentHost{%endblock%}
 {%block script%}<script>
     //set up client socket
-    const socket = io("http://192.168.4.245:8080");
+    const socket = io("http://192.168.4.127:8080");
     socket.on("connect", () => {
         console.log("connected");
         //Reqeust Data Refresh from the server
@@ -11,45 +12,72 @@
     });
     //Receive Tournament Data from the server
     socket.on("roomsUpdate", (data) => {
-        let roomsContainer = $("#roomsContainer");
-        data.forEach((room) => {
-            console.log(room);
-            let roomDiv = $("<div class='room'></div>");
-            let roomName = $("<h4></h4>").text(room.name);
-            let manageRoomBtn = $("<button class='btn btn-primary editRoom' ></button>").text("Manage Room");
-            manageRoomBtn.click(() => {
-               window.location.href = "/host/manage/room?roomKey=" + room.privateKey;
-            });
-            let roomPrivateKey = $("<h4></h4>").text(room.privateKey);
-            let roomPublicKey = $("<h4></h4>").text(room.publicKey);
-            roomDiv.append(roomName);
-            roomDiv.append(manageRoomBtn);
-            roomDiv.append(roomPrivateKey);
-            roomDiv.append(roomPublicKey);
-            roomsContainer.append(roomDiv);
+        //Ensure that the tournament we are looking at is the same as the one we are recieving data for
+        if (data.tournKey == {{ tournKey|tojson }}){
 
-        });
+            $("#roomsContainer").empty();
+            var labelRoomDiv = $("<div class='room'><h6>Room Name</h6><h6>Join Room</h6><h6>Public Key</h6><h6>Private Key</h6><h6>Status</h6><h6>Delete</h6></div>")
+            $("#roomsContainer").append(labelRoomDiv);
+            data.rooms.forEach((room) => {
+                console.log(room);
+                let roomDiv = $("<div class='room'></div>");
+                let roomName = $("<h4></h4>").text(room.name);
+                let manageRoomBtn = $("<button class='btn btn-primary editRoom' ></button>").text("Manage Room");
+                manageRoomBtn.click(() => {
+                window.location.href = "/host/manage/room?roomKey=" + room.privateKey;
+                });
+                let roomPrivateKey = $("<h4></h4>").text(room.privateKey);
+                let roomPublicKey = $("<h4></h4>").text(room.publicKey);
+                let roomDeleteBtn = $('<i class="fa-solid fa-trash" id="deleteRoom' + room.privateKey + '" data-toggle="tooltip" data-placement="top" title="Delete this Tournament"></i>').click(() => {
+                    //show warning modal
+                    $("#deleteRoomWarning").modal("show");
+                    $("#deleteRoomFinal").click(() => {
+                        fetch("/host/manage/room?roomKey=" + room.privateKey, {
+                            method: "DELETE"
+                        })
+                        .then((res) => {
+                            if (res.status == 200) {
+                                window.location.href = "/host/manage/tourn?tournKey={{tournKey}}";
+                            }
+                        });
+                    });
+                });
+                roomDiv.append(roomName);
+                roomDiv.append(manageRoomBtn);
+                roomDiv.append(roomPublicKey);
+                roomDiv.append(roomPrivateKey);
+
+                roomDiv.append($("<h4></h4>").text(room.isLive ? "Live" : "Not Live"));
+                roomDiv.append(roomDeleteBtn);
+                $("#roomsContainer").append(roomDiv);
+
+            });
+        }
 
     });
 
     socket.on("teamsUpdate", (data) => {
-        let teamsContainer = $("#teamsContainer");
-        data.forEach((team) => {
-            console.log(team);
-            let teamDiv = $("<div class='team'></div>");
-            let teamName = $("<h4></h4>").text(team.name);
-            let manageTeamBtn = $("<button class='btn btn-primary'></button>").text("Manage Team");
-            let teamPrivateKey = $("<h4></h4>").text(team.privateKey);
-            let teamPublicKey = $("<h4></h4>").text(team.publicKey);
+        //Ensure that the tournament we are looking at is the same as the one we are recieving data for
+        if (data.tournKey == {{ tournKey|tojson }}){
+        
+            let teamsContainer = $("#teamsContainer");
+            data.teams.forEach((team) => {
+                console.log(team);
+                let teamDiv = $("<div class='team'></div>");
+                let teamName = $("<h4></h4>").text(team.name);
+                let manageTeamBtn = $("<button class='btn btn-primary'></button>").text("Manage Team");
+                let teamPrivateKey = $("<h4></h4>").text(team.privateKey);
+                let teamPublicKey = $("<h4></h4>").text(team.publicKey);
 
-            teamDiv.append(teamName);
-            teamDiv.append(manageTeamBtn);
-            teamDiv.append(teamPrivateKey);
-            teamDiv.append(teamPublicKey);
-            teamsContainer.append(teamDiv);
+                teamDiv.append(teamName);
+                teamDiv.append(manageTeamBtn);
+                teamDiv.append(teamPrivateKey);
+                teamDiv.append(teamPublicKey);
+                teamsContainer.append(teamDiv);
 
-        });
-        console.log(data);
+            });
+            console.log(data);
+        }
     });
     socket.on("disconnect", () => {
         console.log("disconnected from server");
@@ -63,6 +91,10 @@
         $('#deleteTourn').click(() =>{
             //show warning modal
             $("#deleteTournWarning").modal("show");
+        });
+        $('#deleteRoom').click(() =>{
+            //show warning modal
+            $("#deleteRoomWarning").modal("show");
         });
         $('#deleteTournFinal').click(()=>{
             fetch("/host/manage/tourn?tournKey={{tournKey}}",{
@@ -271,6 +303,21 @@
                 <h6>This action cannot be undone</h3>
                 
                 <i class="fa-solid fa-trash fa-2xl" id="deleteTournFinal"style="color: #ffffff; margin-top:15%; font-size:8em;"></i>
+
+            </div>
+            <div class="modal-footer"></div>
+        </div>
+    </div>
+</div>
+<div class="modal fade" tabindex="-1" id="deleteRoomWarning">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content warning-content modal-hexagon center">
+            <div class="modal-header"></div>
+            <div class="modal-body warning-body">
+                <h1>Are you sure you want to delete this Room?</h1>
+                <h6>This action cannot be undone</h3>
+                
+                <i class="fa-solid fa-trash fa-2xl" id="deleteRoomFinal"style="color: #ffffff; margin-top:15%; font-size:8em;"></i>
 
             </div>
             <div class="modal-footer"></div>

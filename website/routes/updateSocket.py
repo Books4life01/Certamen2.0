@@ -51,3 +51,16 @@ def on_roomCurQuestionUpdate( message):
     else:
         room.curQuestion = message["curQuestion"]
         db.session.commit()
+
+def on_liveQuestionUpdate(data):
+    print("liveQuestionUpdate")
+    #retrieve request data
+    roomPrivateKey = data["roomKey"]
+    room = Room.getRoomByPrivate(roomPrivateKey)
+    data['roomKey'] = room.publicKey
+    if room is None or not room.isLive:
+        emit("ERROR", "No room found with that private key")
+    else:
+        print("Sending live question update")
+        emit("incomingQuestion", data, broadcast=True)
+        

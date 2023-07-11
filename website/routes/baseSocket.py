@@ -41,7 +41,7 @@ def on_roomHostConnect( message):
     #retrieve roomKey from request
     privateKey = message["roomKey"]
     #retrieve room object from database using roomKey
-    room = Room.query.filter_by(privateKey=privateKey).first()
+    room = Room.getRoomByPrivate(privateKey)
     if room == None:
         emit("ERROR", "Invalid Room Key")
         return
@@ -57,12 +57,14 @@ def on_roomHostConnect( message):
     print("Host Joined: " + str(sid) + " to room: " + str(privateKey))
     print("Current Live ROoms")
     print(liveRoomClients)
+    #broadcast room live update 
+    on_tournDataRefreshRequest({"tournKey": room.superTournament}, brdcst=True)
 def on_roomClientConnect( message):
     #retrieve sid from request which is the socket id
     sid = request.sid
     #retrieve public roomKey from request
     publicKey = message["roomKey"]
-    room = Room.getByPublic(publicKey)
+    room = Room.getRoomByPublic(publicKey)
     if room == None:
         emit("ERROR", "Invalid Room Key")
     else:

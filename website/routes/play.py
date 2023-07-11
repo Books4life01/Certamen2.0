@@ -25,7 +25,23 @@ def tourn():
         return redirect(url_for('play.home'))
     else:
         return render_template("client/liveTournClient.html", tournKey=tournPublicKey, player=player.serialize)#also pass in the room and tourn credentials
+@play.route('/room')
+def room(): 
+    #get room key
+    roomKey = request.args.get('roomKey')
+    playerPrivateKey = request.args.get('playerKey')
+    
+    room = Room.getRoomByPublic(roomKey)
+    player = Player.getPlayerByPrivate(playerPrivateKey)
 
+    if room == None:
+        flash("Invalid Public Room Key")
+        return redirect(url_for('play.home'))
+    elif player == None:
+        flash("Invalid Player Key")
+        return redirect(url_for('play.home'))
+    else:
+        return render_template("client/liveRoomClient.html", roomKey=roomKey, player=player.serialize)
 #______________ INSTANTANEOUS ROUTE__________
 @play.route('/joinTourn')
 def joinTourn():

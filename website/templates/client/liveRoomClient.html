@@ -1,0 +1,43 @@
+{%extends "home/base.html"%}
+{%block title%}LiveRoomCLient{%endblock%}
+{%block script%}<script>
+     let socket = io.connect('http://192.168.4.127:8080');
+        console.log(window)
+    socket.on('connect', function(){
+        socket.emit('roomClientConnect', data = {"roomKey": {{ roomKey|tojson }}});
+        socket.emit("roomDataRefreshRequest", data = {"roomKey": {{ roomKey|tojson }}});
+    });
+    socket.on("roomTeamsUpdate", (data) =>{
+        //Ensure that the room we are recieving data for is the room we are in
+        if (data.roomKey == {{ roomKey|tojson }}){
+            let teams = data.teams;
+            console.log(teams);
+        }
+    });
+    socket.on("incomingQuestion", (data) => {
+        if (data.roomKey == {{ roomKey|tojson }}){
+            console.log(data)
+            let question = data.question;
+            let num = data.num;
+            showText("#questionHolder", question, 0, 50);
+        }
+    });
+
+function showText(target, message, index, interval) {   
+  if (index < message.length) {
+    $(target).append(message[index++]);
+    setTimeout(function () { showText(target, message, index, interval); }, interval);
+  }
+}
+
+</script>{%endblock%}
+{%block styles%}<style>
+</style>{%endblock%}
+
+{%block content%}
+<div class="container">
+    <div id="questionHolder">
+
+    </div>
+</div>
+{%endblock%}

@@ -1,7 +1,8 @@
 {%extends "home/base.html"%}
+{%block title%}Score TournamentHost{%endblock%}
 {%block script%}<script>
     //set up client socket
-    const socket = io("http://192.168.4.245:8080");
+    const socket = io("http://192.168.4.127:8080");
     socket.on("connect", () => {
         console.log("connected");
         //Reqeust Data Refresh from the server
@@ -11,45 +12,53 @@
     });
     //Receive Tournament Data from the server
     socket.on("roomsUpdate", (data) => {
-        let roomsContainer = $("#roomsContainer");
-        data.forEach((room) => {
-            console.log(room);
-            let roomDiv = $("<div class='room'></div>");
-            let roomName = $("<h4></h4>").text(room.name);
-            let manageRoomBtn = $("<button class='btn btn-primary editRoom' ></button>").text("Manage Room");
-            manageRoomBtn.click(() => {
-               window.location.href = "/host/manage/room?roomKey=" + room.privateKey;
-            });
-            let roomPrivateKey = $("<h4></h4>").text(room.privateKey);
-            let roomPublicKey = $("<h4></h4>").text(room.publicKey);
-            roomDiv.append(roomName);
-            roomDiv.append(manageRoomBtn);
-            roomDiv.append(roomPrivateKey);
-            roomDiv.append(roomPublicKey);
-            roomsContainer.append(roomDiv);
+        //Ensure that the tournament we are looking at is the same as the one we are recieving data for
+        if (data.tournKey == {{ tournKey|tojson }}) {
+            let roomsContainer = $("#roomsContainer");
+            data.rooms.forEach((room) => {
+                console.log(room);
+                let roomDiv = $("<div class='room'></div>");
+                let roomName = $("<h4></h4>").text(room.name);
+                let manageRoomBtn = $("<button class='btn btn-primary editRoom' ></button>").text("Manage Room");
+                manageRoomBtn.click(() => {
+                window.location.href = "/host/manage/room?roomKey=" + room.privateKey;
+                });
+                let roomPrivateKey = $("<h4></h4>").text(room.privateKey);
+                let roomPublicKey = $("<h4></h4>").text(room.publicKey);
+                let roomDeleteBtn = $('<i class="fa-solid fa-trash" id="deleteTourn" data-toggle="tooltip" data-placement="top" title="Delete this Tournament"></i>')
+                roomDiv.append(roomName);
+                roomDiv.append(manageRoomBtn);
+                roomDiv.append(roomPrivateKey);
+                roomDiv.append(roomPublicKey);
+                roomDiv.append(roomDeleteBtn);
+                roomsContainer.append(roomDiv);
 
-        });
+            });
+        }
 
     });
 
     socket.on("teamsUpdate", (data) => {
-        let teamsContainer = $("#teamsContainer");
-        data.forEach((team) => {
-            console.log(team);
-            let teamDiv = $("<div class='team'></div>");
-            let teamName = $("<h4></h4>").text(team.name);
-            let manageTeamBtn = $("<button class='btn btn-primary'></button>").text("Manage Team");
-            let teamPrivateKey = $("<h4></h4>").text(team.privateKey);
-            let teamPublicKey = $("<h4></h4>").text(team.publicKey);
+        //Ensure that the tournament we are looking at is the same as the one we are recieving data for
+        if (data.tournKey == {{ tournKey|tojson }}) {
+            let teamsContainer = $("#teamsContainer");
+            data.forEach((team) => {
+                console.log(team);
+                let teamDiv = $("<div class='team'></div>");
+                let teamName = $("<h4></h4>").text(team.name);
+                let manageTeamBtn = $("<button class='btn btn-primary'></button>").text("Manage Team");
+                let teamPrivateKey = $("<h4></h4>").text(team.privateKey);
+                let teamPublicKey = $("<h4></h4>").text(team.publicKey);
 
-            teamDiv.append(teamName);
-            teamDiv.append(manageTeamBtn);
-            teamDiv.append(teamPrivateKey);
-            teamDiv.append(teamPublicKey);
-            teamsContainer.append(teamDiv);
+                teamDiv.append(teamName);
+                teamDiv.append(manageTeamBtn);
+                teamDiv.append(teamPrivateKey);
+                teamDiv.append(teamPublicKey);
+                teamsContainer.append(teamDiv);
 
-        });
-        console.log(data);
+            });
+            console.log(data);
+        }
     });
     socket.on("disconnect", () => {
         console.log("disconnected from server");
@@ -201,7 +210,7 @@ i{
 <div class="center" id="teamsInfo">
     <h1 class="center">Teams:</h1>
     <div id="teamsContainer" class="overflow-container center">
-        <div class="team" ><h6>Team Name</h6><h6>Edit Team</h6><h6>Private Key</h6><h6>Public Key</h6>/div>
+        <div class="team" ><h6>Team Name</h6><h6>Edit Team</h6><h6>Private Key</h6><h6>Public Key</h6></div>
     </div>
 </div>
 <div class="modal fade" tabindex="-1" id="addRoomModal">
