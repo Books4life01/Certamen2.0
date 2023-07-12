@@ -2,6 +2,7 @@ from flask_socketio import emit
 from .. import db   
 from ..models import Player, Tournament, Room, Team, Result
 from .. import liveRoomClients
+from .refreshSocket import emitRoomResults, emitRoomData
 
 def on_teamAssignmentUpdate( message):
     #retrieve room Private Key
@@ -41,7 +42,31 @@ def on_roomResultUpdate( message):
             room.results[questionNum-1].teamLetter = message["teamLetter"]
             room.results[questionNum-1].playerNumber = message["playerNum"]
             room.results[questionNum-1].questionNum = questionNum
+            room.results[questionNum-1].roomKey = message["roomKey"]
+            room.results[questionNum-1].tossupQuestion = message["tossupQuestion"]
+            room.results[questionNum-1].bonus1Question = message["bonus1Question"]
+            room.results[questionNum-1].bonus2Question = message["bonus2Question"]
         db.session.commit()
+    #braodcast result update to all clients connected to the room
+    emitRoomResults(roomPrivateKey, True)
+def on_roomCurQuestionAnswerStateUpdate(message):
+    room = Room.getRoomByPrivate(message["roomKey"])
+    if room is None:
+        emit("ERROR", "No room found with that private key")
+    else:
+        room.results[message["curQuestion"]-1].answered = message["answered"]
+    #broadcast result update to all clients connected to the room
+    emitRoomData(message["roomKey"], True)
+    
+def on_roomCurQuestionTypeUpdate(message):
+    room = Room.getRoomByPrivate(message["roomKey"])
+    if room is None:
+        emit("ERROR", "No room found with that private key")
+    else:
+        room.results[message["curQuestion"]-1].curQuestionType = message["curQuestionType"]
+        db.session.commit()
+    #broadcast result update to all clients connected to the room
+    emitRoomData(message["roomKey"], True)
 def on_roomCurQuestionUpdate( message):
     #retrieve request data
     roomPrivateKey = message["roomKey"]
@@ -51,6 +76,8 @@ def on_roomCurQuestionUpdate( message):
     else:
         room.currentQuestion = message["curQuestion"]
         db.session.commit()
+    emitRoomData(message["roomKey"], True)
+
 
 def on_liveQuestionUpdate(data):
     print("liveQuestionUpdate")

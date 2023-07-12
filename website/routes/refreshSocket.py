@@ -9,15 +9,10 @@ def on_tournDataRefreshRequest( message, brdcst=False):
     tournKey = message["tournKey"]
     tourn = Tournament.getTourn(tournKey)
     if tourn != None:
-        #retrieve list of rooms(list of objects) from tournament object
-        rooms = tourn.getRooms()
-        #send room data to client
-        print("Sending Rooms Data: brdcst" + str(brdcst))
-        emit('roomsUpdate', {"tournKey":tournKey, "rooms":rooms}, broadcast=brdcst)
-        print("Rooms Data Sent")
-        #retrieve list of teams(list of objects) from tournament object
-        teams = tourn.getTeams()
-        emit('teamsUpdate', {"tournKey":tournKey, "teams":teams}, broadcast=brdcst)
+        #send all the rooms from the tournament to the client
+        emitTournRooms(tournKey, brdcst)
+        #send all the teams from the tournament to the client
+        emitTournTeams(tournKey, brdcst)
     else:
         #do something
         emit("ERROR", "Tournament not found upon tournDataRefreshRequest")
@@ -27,21 +22,46 @@ def on_roomDataRefreshRequest(message, brdcst=False):
     room = Room.getRoom(roomKey)
 
     if room != None:
-        tourn  = Tournament.getTourn(room.superTournament)
-        #retrieve list of teams(list of objects) from tournament object
-        teams = tourn.getTeams()
-        #send data to client
-        emit('tournTeamsUpdate', {"roomKey":roomKey, "teams":teams}, broadcast=brdcst)
-        #retrieve list of teams(list of objects) from room object
-        roomTeams = room.getTeams()
-        emit('roomTeamsUpdate', {"roomKey":roomKey, "teams":roomTeams}, broadcast=brdcst)
-        #retrieve list of results(list of objects) from room object
-        results = room.getResults()
-        outResults = {
-            "roomKey": roomKey,
-            "curQuestion": room.currentQuestion,
-            "resultList": results,
-        }
-        emit('roomResultsUpdate', outResults, broadcast=brdcst)
+         #emit room specific data
+        emitRoomData(roomKey, brdcst)
+        #send all the teams from the tournament to the client
+        emitTournTeams(room.superTournament, brdcst)
+        #send all the teams selected for  the room to the client
+        emitRoomSelectedTeams(roomKey, brdcst)
+        #send all the results from the room to the client
+        emitRoomResults(roomKey, brdcst)
+       
     else:
         emit("ERROR", "Room not found upon roomDataRefreshRequest")
+#HELPER
+def emitRoomResults(roomKey, brdcst):
+    room = Room.getRoom(roomKey)
+    #retrieve list of results(list of objects) from room object
+    results = room.getResults()
+    outResults = {
+        "roomKey": roomKey,
+        "resultList": results,
+    }
+    emit('roomResultsUpdate', outResults, broadcast=brdcst)
+def emitTournTeams(tournKey, brdcst):
+    tourn = Tournament.getTourn(tournKey)
+    #retrieve list of teams(list of objects) from tournament object
+    teams = tourn.getTeams()
+    emit('tournTeamsUpdate', {"tournKey":tournKey, "teams":teams}, broadcast=brdcst)
+def emitRoomSelectedTeams(roomKey, brdcst):
+        #retrieve list of teams(list of objects) from room object
+        room = Room.getRoom(roomKey)
+        roomTeams = room.getTeams()
+        emit('roomTeamsUpdate', {"roomKey":roomKey, "teams":roomTeams}, broadcast=brdcst)
+def emitTournRooms(tournKey, brdcst):
+    tourn = Tournament.getTourn(tournKey)
+    #retrieve list of rooms(list of objects) from tournament object
+    rooms = tourn.getRooms()
+    emit('tournRoomsUpdate', {"tournKey":tournKey, "rooms":rooms}, broadcast=brdcst)
+def emitRoomData(roomKey, brdcst):
+    room = Room.getRoom(roomKey)
+    emit('roomDataUpdate', room.serialize, broadcast=brdcst)
+def emitTournData(tournKey, brdcst):
+    tourn = Tournament.getTourn(tournKey)
+    emit('tournDataUpdate', tourn.serialize, broadcast=brdcst)
+    

@@ -11,7 +11,7 @@
         });
     });
     //Receive Tournament Data from the server
-    socket.on("roomsUpdate", (data) => {
+    socket.on("tournRoomsUpdate", (data) => {
         //Ensure that the tournament we are looking at is the same as the one we are recieving data for
         if (data.tournKey == {{ tournKey|tojson }}){
 
@@ -56,7 +56,7 @@
 
     });
 
-    socket.on("teamsUpdate", (data) => {
+    socket.on("tournTeamsUpdate", (data) => {
         //Ensure that the tournament we are looking at is the same as the one we are recieving data for
         if (data.tournKey == {{ tournKey|tojson }}){
         

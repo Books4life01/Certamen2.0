@@ -401,7 +401,8 @@ class Result(db.Model):
 
     #QuestionNumber
     questionNumber = db.Column(db.Integer, unique=False)
-    
+    #has the question been answered?
+    answered = db.Column(db.Boolean, unique=False)
     #tossup achieved?
     tossup = db.Column(db.Boolean, unique=False)
     tossupQuestion = db.Column(db.String(2000), unique=False)
@@ -430,7 +431,8 @@ class Result(db.Model):
             'totalPoints': self.totalPoints, 
             'tossupQuestion': self.tossupQuestion,
             'bonus1Question': self.bonus1Question,
-            'bonus2Question': self.bonus2Question
+            'bonus2Question': self.bonus2Question, 
+            'answered': self.answered
         }
 
 

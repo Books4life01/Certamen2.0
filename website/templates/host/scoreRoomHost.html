@@ -1,12 +1,12 @@
 {% extends "home/base.html"%}
 {% block title %}scoreRoomHost{% endblock %}
-{%block script%}<script>
+{%block script%}
+<script src="{{ url_for('static', filename='script/roomHostBaseCode.js') }}"></script>
 
-    //set up global variables
-    let curQuestion = 1;
-    let results = [];
-    //set up client socket
-    const socket = io("http://192.168.4.127:8080");
+<script>
+    //Template Specific Gloabl Variables
+
+    //Template Specific Socket Handlers
     socket.on("connect", () => {
         console.log("connected");
         //Reqeust Data Refresh from the server
@@ -15,63 +15,8 @@
         });
     });
     
-    socket.on("tournTeamsUpdate", (data) => {
-         //Ensure that the room we are recieving data for is the room we are in
-         if (data.roomKey == {{ roomKey|tojson }}) {
-
-            let teamsContainer = $("#teamsList");
-            data.teams.forEach((team) => {
-                let teamDiv = $("<div class='team'></div>");
-                let teamName = $("<h4></h4>").text(team.name);
-                teamDiv.append(teamName);
-                teamDiv.addClass("team");
-                teamDiv.attr("draggable", true);
-                teamDiv.attr("id", team.privateKey);
-                //create event listeners for draag start and end to add classes to the element being dragged
-                teamDiv.on("dragstart", () =>teamDiv.addClass("dragging"));
-                teamDiv.on("dragend", (event) =>{
-                    teamDiv.removeClass("dragging")
-                });
-                teamDiv.on("dragstart", () =>drag(event));
-                
-                teamsContainer.append(teamDiv);
-
-            });
-        }
-    });
-    socket.on("roomTeamsUpdate", (data) =>{
-        //Ensure that the room we are recieving data for is the room we are in
-        if (data.roomKey == {{ roomKey|tojson }}) {
-            let teams = data.teams;
-            let droppableZones = document.getElementsByClassName("drop-zone");
-            for(let i = 0; i<4; i++){
-                let teamKey = teams[i];
-                if(teamKey != "" && teamKey != null){
-                    let teamDiv = document.getElementById(teamKey);
-                    teamDiv.classList.add("selectedTeam");
-                    droppableZones[i].children[1].innerHTML = "";
-                    droppableZones[i].children[1].appendChild(teamDiv);
-                }
-            }
-        }
-    });
-    socket.on("roomResultsUpdate", (data) =>{
-         //Ensure that the room we are recieving data for is the room we are in
-         if (data.roomKey == {{ roomKey|tojson }}) {
-
-            console.log(" Result Data Recieved from Server")
-            console.log(data)
-            curQuestion = data.curQuestion;
-            results = data.resultList;
-            //update the question number
-            $("#questionNum").text("Question #" + curQuestion);
-            resetResults();
-        }
-        
-    });
-    socket.on("disconnect", () => {
-        console.log("disconnected from server");
-    });
+    
+    
 
     //set up event listeners
     $(document).ready(() => {
@@ -188,69 +133,6 @@
         resultData = results[curQuestion-1];
         console.log(resultData)
     }
-        
-
-    function drag(event){
-        event.dataTransfer.setData("text", event.target.id);
-        console.log("dragging:", event.target.id)
-    }
-    function drop(event){
-        event.preventDefault();//prevents default action of dropping which is to block the drop
-        var data = event.dataTransfer.getData("text");//retrieves the id of the element to drop  sent by the drag funcion
-        //ensure the target is a droppable element and if it isnt retrive its parent element
-        let target = event.target;
-        console.log(target)
-        while(!target.classList.contains("droppable") && !target.classList.contains("overflow-container")){
-            target = target.parentElement;
-        }
-        console.log(target)
-
-        //remove all children from the target element and if the child is draggable reappend it to the teams list
-        Array.from(target.children).forEach((child) => {
-            if(child.getAttribute("draggable")){
-                child.classList.remove("selectedTeam");
-                document.getElementById("teamsList").appendChild(child);
-            }
-            else target.removeChild(child);
-        });
-
-        //add the selected team class to the element being dropped
-        let elem = document.getElementById(data);
-        let parent = elem.parentElement;
-
-        if(target.classList.contains("droppable"))elem.classList.add("selectedTeam");
-        else elem.classList.remove("selectedTeam");
-        
-        //append the element to the drop target
-        target.appendChild(elem);
-        //if parent has droppable class 
-        if(parent.classList.contains("droppable")){
-           //add the "Add Team Here" text back
-           let h1 = document.createElement("h1");
-              h1.innerHTML = "Add Team Here";
-           parent.appendChild(h1);
-        }
-
-        //update the server with the new team assignments
-        let teamA = document.getElementById("Team A").children[1].children[0].id ;
-        let teamB = document.getElementById("Team B").children[1].children[0].id;
-        let teamC = document.getElementById("Team C").children[1].children[0].id;
-        let teamD = document.getElementById("Team D").children[1].children[0].id;
-        socket.emit("teamAssignmentUpdate", data = {
-            "roomKey": {{ roomKey|tojson }},
-            "teamA": teamA,
-            "teamB": teamB,
-            "teamC": teamC,
-            "teamD": teamD
-        });
-    }
-    //prevents default action of dropping which is to block the drop
-    function allowDrop(event){
-        event.preventDefault();
-    }
-    
-
-
 </script>{%endblock%}
 {% block styles %}<style>
 #teamsList{
@@ -438,7 +320,7 @@ body{
     </div>
     <div  class="container tab-pane fade" id="QuestionHolder">
         <div class="tossup-header">
-            <h1 id="questionNum">Question: #1</h1>
+            <h1 class="questionNum">Question: #1</h1>
             <div class="arrows">
                 <button name="task" id="back" class="arrow-left" ></button>
                 <button name="task" id="advance" class="arrow-right"></button>
