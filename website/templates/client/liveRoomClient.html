@@ -1,8 +1,8 @@
 {%extends "home/base.html"%}
 {%block title%}LiveRoomCLient{%endblock%}
 {%block script%}<script>
-     let socket = io.connect('http://192.168.4.127:8080');
-        console.log(window)
+    let socket = io.connect('http://192.168.4.127:8080');
+    let results = "";
     socket.on('connect', function(){
         socket.emit('roomClientConnect', data = {"roomKey": {{ roomKey|tojson }}});
         socket.emit("roomDataRefreshRequest", data = {"roomKey": {{ roomKey|tojson }}});
@@ -15,29 +15,70 @@
         }
     });
     socket.on("incomingQuestion", (data) => {
-        if (data.roomKey == {{ roomKey|tojson }}){
-            console.log(data)
-            let question = data.question;
-            let num = data.num;
-            showText("#questionHolder", question, 0, 100);
-        }
+        //if (data.roomKey == {{ roomKey|tojson }}){
+        //    console.log(data)
+        //    let question = data.question;
+        //    let num = data.num;
+        //    showText("#questionHolder", question, 0, 100);
+        //}
+    });
+    $(document).ready(function(){
+        $(document).on("keypress", function(e){
+            console.log("KEY PRESSED: " + e.which);
+        });
     });
 
-function showText(target, message, index, interval) {   
-  if (index < message.length) {
-    $(target).append(message[index++]);
-    setTimeout(function () { showText(target, message, index, interval); }, interval);
-  }
-}
 
 </script>{%endblock%}
 {%block styles%}<style>
+    #currentQuestionHolder{
+        font-size: 2em;
+        font-weight: bold;
+        text-align: center;
+        border: 1px dotted  white;
+        width:50%;
+        height:300px;
+        margin-left: 5%;
+        margin-right:5%;
+    }
+    #pastQuestions{
+        border: 1px dotted orange;
+        border-radius: 25px;
+        width:35%;
+        height:80%;
+        margin-left: 5%;
+        
+    }
+    #questionText{
+        border: 1px dotted blue;
+        height: 200px;
+        overflow: auto;
+    }
+    .container{
+        position: relative;
+        display: flex;
+        flex-direction: row;
+        justify-content: space-evenly;
+        align-items: center;
+        border: 1px dotted red;
+        width:100%;
+        max-width:none;
+        height:500px;
+
+    }
 </style>{%endblock%}
 
 {%block content%}
 <div class="container">
-    <div id="questionHolder">
+    <div id="pastQuestions">
 
     </div>
+
+    <div id="currentQuestionHolder">
+        <h1 class="center" id="questionTitle">Tossup #1</h1>
+        <div id="questionText"></div>
+        <div id="questionAnswer"><h6>Press Space to Buzz in</h6></div>
+    </div>
+    
 </div>
 {%endblock%}

@@ -49,7 +49,7 @@ def on_roomCurQuestionUpdate( message):
     if room is None:
         emit("ERROR", "No room found with that private key")
     else:
-        room.curQuestion = message["curQuestion"]
+        room.currentQuestion = message["curQuestion"]
         db.session.commit()
 
 def on_liveQuestionUpdate(data):

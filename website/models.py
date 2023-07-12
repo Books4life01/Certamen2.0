@@ -176,7 +176,9 @@ class Room(db.Model):
     results = db.relationship('Result', lazy=True, backref='room')
 
     #active Question Number
-    currentQuestion = db.Column(db.Integer, unique=False, default=1)    
+    currentQuestion = db.Column(db.Integer, unique=False, default=1)  
+    #active Question Type: so if tossup is being asked, or bonus1, or bonus2
+    curQuestionType = db.Column(db.Integer, unique=False, default=0)#0=Tossup, 1=Bonus1, 2=Bonus2
 
     #isLive determines if the room is live or not: it is live if a client is currently managing the room
     isLive = db.Column(db.Boolean, unique=False)
@@ -201,8 +203,8 @@ class Room(db.Model):
     #get Results in the room
     def getResults(self):
         return [result.serialize for result in self.results]
-    def addResult(self, teamLetter, playerNumber, questionNumber, tossupAchieved, bonus1Achieved, bonus2Achieved):
-        result = Result(teamLetter=teamLetter, playerNumber=playerNumber, questionNumber=questionNumber, tossup=tossupAchieved, bonus1=bonus1Achieved, bonus2=bonus2Achieved)
+    def addResult(self, teamLetter, playerNumber, questionNumber, tossupAchieved, bonus1Achieved, bonus2Achieved, tossupQuestion="None", bonus1Question="None", bonus2Question="None"):
+        result = Result(teamLetter=teamLetter, playerNumber=playerNumber, questionNumber=questionNumber, tossup=tossupAchieved, bonus1=bonus1Achieved, bonus2=bonus2Achieved, tossupQuestion=tossupQuestion, bonus1Question=bonus1Question, bonus2Question=bonus2Question, superRoom = self.publicKey)
         db.session.add(result)
         self.results.append(result)
         db.session.commit()
@@ -269,6 +271,8 @@ class Room(db.Model):
             'teamBPlayers': self.teamBPlayers,
             'teamCPlayers': self.teamCPlayers,
             'teamDPlayers': self.teamDPlayers,
+            'curQuestionType': self.curQuestionType,
+            'currentQuestion': self.currentQuestion,
         }
     #STATIC FUNCTIONS
     #see if a room exsists with either a piblic or private key
@@ -400,9 +404,12 @@ class Result(db.Model):
     
     #tossup achieved?
     tossup = db.Column(db.Boolean, unique=False)
+    tossupQuestion = db.Column(db.String(2000), unique=False)
     #bonuses achieved?
     bonus1 = db.Column(db.Boolean, unique=False)
+    bonus1Question = db.Column(db.String(2000), unique=False)
     bonus2 = db.Column(db.Boolean, unique=False)
+    bonus2Question = db.Column(db.String(2000), unique=False)
 
     #calculate the total points
     @property
@@ -420,7 +427,10 @@ class Result(db.Model):
             'tossup': self.tossup,
             'bonus1': self.bonus1,
             'bonus2': self.bonus2,
-            'totalPoints': self.totalPoints
+            'totalPoints': self.totalPoints, 
+            'tossupQuestion': self.tossupQuestion,
+            'bonus1Question': self.bonus1Question,
+            'bonus2Question': self.bonus2Question
         }
 
 
