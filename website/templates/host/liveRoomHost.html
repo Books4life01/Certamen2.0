@@ -18,13 +18,15 @@
 
     //set up event listeners
     $(document).ready(() => {
-        $("#question-Send").click(() => {
-            socket.emit("liveQuestionUpdate", data = {
-                "roomKey": {{ roomKey|tojson }},
-                "question": $("#questionInput").val(),
-                "questionNum":curQuestion
+        console.log("Document Ready");
+        ["tossupQuestion", "bonus1Question", "bonus2Question"].forEach(function(elem,index){
+            $("#"+elem+"Send").click( () => {
+                console.log("#"+elem+"Input")
+               sendQuestion($("#"+elem+"Input").val(), index);
             });
         });
+        
+        $("")
         $("#teamLetter").on("change", () => {
            updateResultData();
         });
@@ -164,12 +166,28 @@
             $("#bonus2").prop("checked", resultData.bonus2);
 
             //reset send Question divs
-            if(resultData.answered){
-                $("")
+            for(type in ['tossupQuestion', 'bonus1Question', 'bonus2Question']){
+                if(resultData[type] != ""){
+                    $("#"+type+"Send").addClass("hidden");
+                    $("#"+type+"View").removeClass("hidden");
+                }
+                else{
+                    $("#"+type+"Send").addClass("hidden");
+                    $("#"+type+"View").removeClass("hidden");
+                }
             }
         }
         resultData = results[curQuestion-1];
         console.log(resultData)
+    }
+    function sendQuestion(text, type){
+        console.log(text);
+        socket.emit("liveQuestionUpdate", data = {
+            "roomKey": {{ roomKey|tojson }},
+            "questionNum": curQuestion,
+            "questionType": type,
+            "questionText": text
+        });
     }
     
 
@@ -469,8 +487,8 @@
             </ul>
             <div class="tab-content">
                 <div class=" questionContainer container tab-pane fade show active" id="tossupQuestion">
-                    <div class="questionSend container " id="tossupQuestionSend">
-                        <button class="input-group-text btn btn-primary" id="tossup-question-Send">Send Tossup</button>
+                    <div class="questionSend container ">
+                        <button class="input-group-text btn btn-primary" id="tossupQuestionSend">Send Tossup</button>
                         <textarea class="form-control" id="tossupQuestionInput" rows="5"></textarea> 
                     </div>
                     <div class = "questionView hidden" id="tossupQuestionView">
@@ -493,8 +511,8 @@
                     
                 </div>
                 <div class=" questionContainer container tab-pane fade" id="bonus1Question">
-                    <div class="questionSend container" id="bonus1QuestionSend">
-                        <button class="input-group-text btn btn-primary" id="bonus1-question-Send">Send Bonus1</button>
+                    <div class="questionSend container" >
+                        <button class="input-group-text btn btn-primary" id="bonus1QuestionSend">Send Bonus1</button>
                         <textarea class="form-control" id="bonus1QuestionInput" rows="5"></textarea> 
                     </div>
                     <div class = "questionView hidden" id="bonus1QuestionView">
@@ -517,8 +535,8 @@
                     
                 </div>
                 <div class=" questionContainer container tab-pane fade " id="bonus2Question">
-                    <div class="questionSend container" id="bonus2QuestionSend">
-                        <button class="input-group-text btn btn-primary" id="bonus2-question-Send">Send Bonus2</button>
+                    <div class="questionSend container" >
+                        <button class="input-group-text btn btn-primary" id="bonus2QuestionSend">Send Bonus2</button>
                         <textarea class="form-control" id="bonus2QuestionInput" rows="5"></textarea> 
                     </div>
                     <div class = "questionView hidden" id="bonus2QuestionView">

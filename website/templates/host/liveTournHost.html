@@ -3,12 +3,23 @@
 {%block script%}<script>
     //set up client socket
     const socket = io("http://192.168.4.127:8080");
+    let tournKey = {{ tournKey|tojson }};
+    console.log(tournKey);
+    let tourn = null;
     socket.on("connect", () => {
         console.log("connected");
         //Reqeust Data Refresh from the server
         socket.emit("tournDataRefreshRequest", data = {
-            "tournKey": {{ tournKey|tojson }}
+            "tournKey": tournKey
         });
+    });
+    socket.on("tournDataUpdate", (data) => {
+        console.log("Tourn Data Update")
+        console.log(data);
+        if(data.privateKey == tournKey || data.publicKey == tournKey){
+            tourn = data;
+        }
+        $("#tournLabel").text("LIVE TOURN Private: " + tourn.privateKey + "Public:" + tourn.publicKey);
     });
     //Receive Tournament Data from the server
     socket.on("tournRoomsUpdate", (data) => {
@@ -85,6 +96,9 @@
 
     //set up event listeners
     $(document).ready(() => {
+        
+       
+        
         $("#addItem").click(() => {
             $("#addRoomModal").modal("show");
         });
@@ -110,6 +124,7 @@
         $('[data-toggle="tooltip"]').tooltip({
             placement: 'top'
         });
+
 
     });
 </script>{%endblock%}
@@ -220,7 +235,7 @@
     
     </style>{%endblock%}
     {%block content%}
-<h1>LIVE TOURN Private:{{tournKey}} Public: </h1>
+<h1 id="tournLabel"></h1>
 <div id="roomsInfo" class="center">
     <h1 class="center">Rooms:</h1>
     <div id="roomsContainer" class="overflow-container center">

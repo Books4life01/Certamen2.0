@@ -111,6 +111,17 @@ class Tournament(db.Model):
     def delete(self):
         db.session.delete(self)
         db.session.commit()
+    @property
+    def serialize(self):
+        return {
+            'privateKey': self.privateKey,
+            'publicKey': self.publicKey,
+            'name': self.name,
+            'players': self.getPlayers(),
+            'rooms': self.getRooms(),
+            'teams': self.getTeams(),
+            'liveTourn': self.liveTourn
+        }
 
     
     
@@ -199,7 +210,7 @@ class Room(db.Model):
 
     #return the selectedTeams in the room
     def getTeams(self):
-        return {"teams":(self.teamA, self.teamB, self.teamC, self.teamD)}
+        return [self.teamA, self.teamB, self.teamC, self.teamD]
     #get Results in the room
     def getResults(self):
         return [result.serialize for result in self.results]

@@ -84,6 +84,18 @@ def on_liveQuestionUpdate(data):
     #retrieve request data
     roomPrivateKey = data["roomKey"]
     room = Room.getRoomByPrivate(roomPrivateKey)
+    result = room.results[data["questionNum"]-1]
+
+    questionType = data["questionType"]
+    if questionType == 0:
+        result.tossupQuestion = data["questionText"]
+    elif questionType == 1:
+        result.bonus1Question = data["questionText"]
+    elif questionType == 2:
+        result.bonus2Question = data["questionText"]
+    db.session.commit()
+    
+
     data['roomKey'] = room.publicKey
     if room is None or not room.isLive:
         emit("ERROR", "No room found with that private key")

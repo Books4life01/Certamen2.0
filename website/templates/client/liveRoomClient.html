@@ -3,6 +3,7 @@
 {%block script%}<script>
     let socket = io.connect('http://192.168.4.127:8080');
     let results = "";
+    let paused = false;
     socket.on('connect', function(){
         socket.emit('roomClientConnect', data = {"roomKey": {{ roomKey|tojson }}});
         socket.emit("roomDataRefreshRequest", data = {"roomKey": {{ roomKey|tojson }}});
@@ -14,19 +15,38 @@
             console.log(teams);
         }
     });
+    
     socket.on("incomingQuestion", (data) => {
-        //if (data.roomKey == {{ roomKey|tojson }}){
-        //    console.log(data)
-        //    let question = data.question;
-        //    let num = data.num;
-        //    showText("#questionHolder", question, 0, 100);
-        //}
+        //Ensure that the room we are recieving data for is the room we are in 
+
+        if (data.roomKey == {{ roomKey|tojson }}){
+            console.log(data)
+            $("#questionTitle").text("Question #" + data.questionNum + ": " + ["Toss Up", "Bonus1", "Bonus2"][data.questionType]);
+            $("#questionText").text("");
+            let question = data.questionText;
+            showText("#questionText", question, 100);
+        }
     });
     $(document).ready(function(){
         $(document).on("keypress", function(e){
+            if(e.which == 32){
+                console.log("SPACE PRESSED");
+                paused = true;
+            }
             console.log("KEY PRESSED: " + e.which);
         });
-    });
+    }); 
+
+    function showText(target, message,  interval){
+        if (message.length>0 && paused == false){
+            $(target).append(message[0]);
+            message = message.substring(1);
+            setTimeout(function(){
+                showText(target, message, interval);
+            }, interval);
+        }
+        else return;
+    }
 
 
 </script>{%endblock%}
@@ -75,7 +95,7 @@
     </div>
 
     <div id="currentQuestionHolder">
-        <h1 class="center" id="questionTitle">Tossup #1</h1>
+        <h1 class="center" id="questionTitle">Question #1</h1>
         <div id="questionText"></div>
         <div id="questionAnswer"><h6>Press Space to Buzz in</h6></div>
     </div>

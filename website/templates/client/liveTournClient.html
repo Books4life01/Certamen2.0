@@ -6,7 +6,7 @@
         socket.emit('tournDataRefreshRequest', data = {"tournKey": {{ tournKey|tojson }}});
     });
     
-    socket.on('roomsUpdate', function(data){
+    socket.on('tournRoomsUpdate', function(data){
         //Ensure that the tournament we are looking at is the same as the one we are recieving data for
         if (data.tournKey == {{ tournKey|tojson }}) {
         

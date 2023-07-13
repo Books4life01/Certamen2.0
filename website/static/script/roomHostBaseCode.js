@@ -7,17 +7,16 @@ const socket = io.connect('http://192.168.4.127:8080');
 //Socket Handlers
 
 socket.on('roomDataUpdate', data=>{
-    console.log("Room Data Recieved from the Server")
-    console.log(data);
-    curQuestion = data.currentQuestion;
-    curQuestionType = data.curQuestionType;
-    roomData = data;
-    $(".questionNum").text("Question #" + curQuestion);
-    try{
-        
+    if(data.privateKey == roomKey || data.publicKey == roomKey){
+        console.log("Room Data Recieved from the Server")
+        console.log(data);
+        curQuestion = data.currentQuestion;
+        curQuestionType = data.curQuestionType;
+        roomData = data;
+        $(".questionNum").text("Question #" + curQuestion);
+        resetResults();
     }
-    catch{}
-    
+
 });
 socket.on("tournTeamsUpdate", (data) => {
     //Ensure that the room we are recieving data for is the room we are in
@@ -54,6 +53,8 @@ socket.on("roomTeamsUpdate", (data) =>{
         let droppableZones = document.getElementsByClassName("drop-zone");
         for(let i = 0; i<4; i++){
             let teamKey = teams[i];
+            console.log("Team Key: " + teamKey);
+
             if(teamKey != "" && teamKey != null){
                 let teamDiv = document.getElementById(teamKey);
                 teamDiv.classList.add("selectedTeam");
