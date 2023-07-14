@@ -11,13 +11,10 @@
     //template Specific Socket Handlers -> socket variables defined in roomHostBaseCode.js
     socket.on('connect', function(){
         console.log("Connected to server");
-        socket.emit("roomDataRefreshRequest", data = {"roomKey": {{ roomKey|tojson }}});
-        socket.emit('roomHostConnect', data = {"roomKey": {{ roomKey|tojson }}});
-
     });
 
     //set up event listeners
-    $(document).ready(() => {
+   function documentReady() {
         console.log("Document Ready");
         ["tossupQuestion", "bonus1Question", "bonus2Question"].forEach(function(elem,index){
             $("#"+elem+"Send").click( () => {
@@ -25,26 +22,24 @@
                sendQuestion($("#"+elem+"Input").val(), index);
             });
         });
-        
-        $("")
         $("#teamLetter").on("change", () => {
-           updateResultData();
+           sendResultData();
         });
         $("#playerNum").on("change", () => {
-            updateResultData();
+            sendResultData();
         });
         $("#tossup").on("change", () => {
-            updateResultData();
+            sendResultData();
         });
         $("#bonus1").on("change", () => {
-            updateResultData();
+            sendResultData();
         });
         $("#bonus2").on("change", () => {
-            updateResultData();
+            sendResultData();
         });
         $(".advance").on("click", () => {
             //update the result data from current question 
-            updateResultData();
+            sendResultData();
             //advance a question
             updateCurQuestion(curQuestion+1);
             //load preset results for this new question if they exist
@@ -53,20 +48,20 @@
         $(".back").on("click", () => {
             if(curQuestion > 1){
                 //update the result data from current question
-                updateResultData();
+                sendResultData();
                 //back up a question
                 updateCurQuestion(curQuestion-1);
                 //load preset results for this new question if they exist
                 resetResults();
             }
         });
-    });
+    }
 
     /**
         * Updates the results array with the current results and sends the data to the server
         * @param {int} roomCurQuestion the current question of the room
     **/
-    function updateResultData(){
+    function sendResultData(){
         //create data object to send to server
         out = {}
         console.log("Updating Results and Sending to Server")
@@ -79,9 +74,9 @@
         out['bonus2']= results[curQuestion-1].bonus2 = $("#bonus2").prop("checked");
         out['roomKey'] =results[curQuestion-1].roomKey= {{ roomKey|tojson }};
         out['questionNum'] = curQuestion;
-        out['tossupQuestion'] = results[curQuestion-1].tossupQuestion = $("#tossupQuestionInput").val();
-        out['bonus1Question'] = results[curQuestion-1].bonus1Question = $("#bonus1QuestionInput").val();
-        out['bonus2Question'] = results[curQuestion-1].bonus1Question = $("#bonus2QuestionInput").val(); 
+        out['tossupQuestion'] = results[curQuestion-1].tossupQuestion;
+        out['bonus1Question'] = results[curQuestion-1].bonus1Question ;
+        out['bonus2Question'] = results[curQuestion-1].bonus1Question; 
         out['tossupAnswer'] = results[curQuestion-1].tossupAnswer
         out['bonus1Answer'] = results[curQuestion-1].bonus1Answer
         out['bonus2Answer'] = results[curQuestion-1].bonus2Answer
@@ -145,6 +140,12 @@
             $("#playerNum").prop("selectedIndex",0);
             $("#bonus1").prop("checked", false);
             $("#bonus2").prop("checked", false);
+            ['tossup', 'bonus1', 'bonus2'].forEach((type) => {
+                $("#"+type+"QuestionSend").removeClass("hidden");
+                $("#"+type+"QuestionInput").removeClass("hidden");
+                $("#"+type+"QuestionView").addClass("hidden");
+            });
+
             //and create a new result object for this question
             results.push({
                 "teamLetter": "0",
@@ -164,12 +165,14 @@
             console.log("Local Results")
             console.log(results)
             //TODO add roomUpdate emission here
-            updateResultData();
+            sendResultData();
+            resetResults();
 
 
         }
         //otherwise load the results from the results array
         else{
+            console.log("Loading Results from Array")
             let resultData = results[curQuestion-1];
           
             $("#teamLetter").prop("selectedIndex", parseInt(resultData.teamLetter));
@@ -184,18 +187,20 @@
                     $("#"+type+"QuestionInput").addClass("hidden");
                     $("#"+type+"QuestionView").removeClass("hidden");
                     
-                    $("#"+type+"QuestionView>div>div>.preAnsweredQuestionHolder").val(resultData[type+"Question"]);
                     $("#"+type+"QuestionView>div>div>.preAnsweredQuestionHolder").prop("disabled", true);
-                    $("#"+type+"QuestionView>div>div>.preAnsweredAnswerHolder").val(resultData[type+"Answer"]);
                     $("#"+type+"QuestionView>div>div>.preAnsweredAnswerHolder").prop("disabled", true);
-
+                    $("#"+type+"QuestionView>div>div>.preAnsweredAnswerHolder").val(resultData[type+"Answer"]);
+                    $("#"+type+"QuestionView>div>div>.preAnsweredQuestionHolder").val(resultData[type+"Question"]);
 
                 }
                 else{
                     $("#"+type+"QuestionSend").removeClass("hidden");
                     $("#"+type+"QuestionInput").removeClass("hidden");
                     $("#"+type+"QuestionView").addClass("hidden");
+                    $("#"+type+"QuestionInput").val("");
                 }
+                
+
             });
             resultData = results[curQuestion-1];
             console.log("Result just reset")

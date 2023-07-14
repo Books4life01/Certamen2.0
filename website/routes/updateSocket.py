@@ -19,6 +19,7 @@ def on_teamAssignmentUpdate( message):
         room.teamD = teamD
         db.session.commit()
     #TO-DO: send Updated team assignment to any clients connected to the room
+    emitRoomData(roomPrivateKey, True)
 def on_roomResultUpdate( message):
     #retrieve request data
     roomPrivateKey = message["roomKey"]
@@ -35,6 +36,7 @@ def on_roomResultUpdate( message):
         if(len(results) < questionNum):
             room.addResult(message["teamLetter"],message["playerNum"],questionNum, message["tossup"], message["bonus1"], message["bonus2"])
         else:
+            print(message)
             #otherwise update the result
             room.results[questionNum-1].tossup = message["tossup"]
             room.results[questionNum-1].bonus1 = message["bonus1"]

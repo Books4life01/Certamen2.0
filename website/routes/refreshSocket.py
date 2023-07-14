@@ -23,7 +23,7 @@ def on_roomDataRefreshRequest(message, brdcst=False):
     room = Room.getRoom(roomKey)
 
     if room != None:
-         #emit room specific data
+        #emit room specific data
         emitRoomData(roomKey, brdcst)
         #send all the teams from the tournament to the client
         emitTournTeams(room.superTournament, brdcst)

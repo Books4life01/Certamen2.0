@@ -1,7 +1,7 @@
 {%extends "home/base.html"%}
 {%block title%}LiveRoomCLient{%endblock%}
 {%block script%}<script>
-    let socket = io.connect('http://192.168.4.127:8080');
+    let socket = io.connect('http://172.16.68.165:8080');
     let results = "";
     let paused = false;
     socket.on('connect', function(){
@@ -32,6 +32,7 @@
             if(e.which == 32){
                 console.log("SPACE PRESSED");
                 paused = true;
+                startAsyncTimer(10);
             }
             console.log("KEY PRESSED: " + e.which);
         });
@@ -46,6 +47,24 @@
             }, interval);
         }
         else return;
+    }
+
+    function startAsyncTimer(seconds){
+        $("#timer").removeClass("hidden");
+        var timer = setInterval(() =>{
+            if (seconds > 0){
+                seconds--;
+                $("#timer").text("Submit Answer In: " + seconds + " seconds");
+            }
+            else{
+                $("#timer").text("Time's Up!");
+                clearInterval(timer)
+                paused=false;
+                setTimeout(() => {
+                    $("#timer").addClass("hidden");
+                }, 2000);
+            }
+        }, seconds*100);
     }
 
 
@@ -98,6 +117,7 @@
         <h1 class="center" id="questionTitle">Question #1</h1>
         <div id="questionText"></div>
         <div id="questionAnswer"><h6>Press Space to Buzz in</h6></div>
+        <div id="timer"class="hidden"></div>
     </div>
     
 </div>
