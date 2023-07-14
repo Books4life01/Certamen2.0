@@ -46,6 +46,9 @@ def on_roomResultUpdate( message):
             room.results[questionNum-1].tossupQuestion = message["tossupQuestion"]
             room.results[questionNum-1].bonus1Question = message["bonus1Question"]
             room.results[questionNum-1].bonus2Question = message["bonus2Question"]
+            room.results[questionNum-1].tossupAnswer = message["tossupAnswer"]
+            room.results[questionNum-1].bonus1Answer = message["bonus1Answer"]
+            room.results[questionNum-1].bonus2Answer = message["bonus2Answer"]
         db.session.commit()
     #braodcast result update to all clients connected to the room
     emitRoomResults(roomPrivateKey, True)
@@ -81,9 +84,12 @@ def on_roomCurQuestionUpdate( message):
 
 def on_liveQuestionUpdate(data):
     print("liveQuestionUpdate")
+    print(data)
     #retrieve request data
     roomPrivateKey = data["roomKey"]
     room = Room.getRoomByPrivate(roomPrivateKey)
+    print(len(room.results))
+
     result = room.results[data["questionNum"]-1]
 
     questionType = data["questionType"]
@@ -102,4 +108,5 @@ def on_liveQuestionUpdate(data):
     else:
         print("Sending live question update")
         emit("incomingQuestion", data, broadcast=True)
+        emitRoomData(roomPrivateKey, True)
         

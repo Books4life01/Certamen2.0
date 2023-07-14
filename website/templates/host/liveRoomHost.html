@@ -69,7 +69,8 @@
     function updateResultData(){
         //create data object to send to server
         out = {}
-
+        console.log("Updating Results and Sending to Server")
+        console.log(results)
         //Retrieve the current results from the form and store them in the results array, and in the data object
         out['teamLetter']= results[curQuestion-1].teamLetter = $("#teamLetter").val();
         out['playerNum'] = results[curQuestion-1].playerNum = $("#playerNum").val();
@@ -80,8 +81,11 @@
         out['questionNum'] = curQuestion;
         out['tossupQuestion'] = results[curQuestion-1].tossupQuestion = $("#tossupQuestionInput").val();
         out['bonus1Question'] = results[curQuestion-1].bonus1Question = $("#bonus1QuestionInput").val();
-        out['bonus2Question'] = results[curQuestion-1].bonus1Question = $("#bonus2QuestionInput").val();       
-        console.log("Saving");
+        out['bonus2Question'] = results[curQuestion-1].bonus1Question = $("#bonus2QuestionInput").val(); 
+        out['tossupAnswer'] = results[curQuestion-1].tossupAnswer
+        out['bonus1Answer'] = results[curQuestion-1].bonus1Answer
+        out['bonus2Answer'] = results[curQuestion-1].bonus2Answer
+        console.log("Saving and Sending");
         console.log(out);
         socket.emit("roomResultUpdate", data = out);
     }
@@ -152,8 +156,16 @@
                 'tossupQuestion':"",
                 'bonus1Question':"",
                 'bonus2Question':"",
+                'tossupAnswer':"",
+                'bonus1Answer':"",
+                'bonus2Answer':"",
                 "answered":false
             })
+            console.log("Local Results")
+            console.log(results)
+            //TODO add roomUpdate emission here
+            updateResultData();
+
 
         }
         //otherwise load the results from the results array
@@ -166,28 +178,45 @@
             $("#bonus2").prop("checked", resultData.bonus2);
 
             //reset send Question divs
-            for(type in ['tossupQuestion', 'bonus1Question', 'bonus2Question']){
-                if(resultData[type] != ""){
-                    $("#"+type+"Send").addClass("hidden");
-                    $("#"+type+"View").removeClass("hidden");
+            ['tossup', 'bonus1', 'bonus2'].forEach((type) => {
+                if(resultData[type+"Question"] != ""){
+                    $("#"+type+"QuestionSend").addClass("hidden");
+                    $("#"+type+"QuestionInput").addClass("hidden");
+                    $("#"+type+"QuestionView").removeClass("hidden");
+                    
+                    $("#"+type+"QuestionView>div>div>.preAnsweredQuestionHolder").val(resultData[type+"Question"]);
+                    $("#"+type+"QuestionView>div>div>.preAnsweredQuestionHolder").prop("disabled", true);
+                    $("#"+type+"QuestionView>div>div>.preAnsweredAnswerHolder").val(resultData[type+"Answer"]);
+                    $("#"+type+"QuestionView>div>div>.preAnsweredAnswerHolder").prop("disabled", true);
+
+
                 }
                 else{
-                    $("#"+type+"Send").addClass("hidden");
-                    $("#"+type+"View").removeClass("hidden");
+                    $("#"+type+"QuestionSend").removeClass("hidden");
+                    $("#"+type+"QuestionInput").removeClass("hidden");
+                    $("#"+type+"QuestionView").addClass("hidden");
                 }
-            }
+            });
+            resultData = results[curQuestion-1];
+            console.log("Result just reset")
+            console.log(resultData)
+
         }
-        resultData = results[curQuestion-1];
-        console.log(resultData)
     }
     function sendQuestion(text, type){
         console.log(text);
+        //send the question to the server 
         socket.emit("liveQuestionUpdate", data = {
             "roomKey": {{ roomKey|tojson }},
             "questionNum": curQuestion,
             "questionType": type,
             "questionText": text
         });
+        //update the results locally
+        console.log(results)
+        console.log(["tossup", "bonus1", "bonus2"][type]+"Question")
+        results[curQuestion-1][["tossup", "bonus1", "bonus2"][type]+"Question"] = text;
+        resetResults();
     }
     
 
@@ -364,8 +393,12 @@
         font-size:8em;
         margin-top:0;
     }
-    .preAnsweredQuestionHolder{
+    .preAnsweredQuestionHolder, .preAnsweredAnswerHolder{
         font-size: 10px;
+    }
+    .preAnsweredAnswerHolder:disabled, .preAnsweredQuestionHolder:disabled{
+        background-color: white;
+        color: black;
     }
     .questionAnswerHolder{
         display:flex;
@@ -499,11 +532,11 @@
                         <div class="questionAnswerHolder">
                             <div class="questionOrAnswerHolder">
                                 <h3 class="questionAnswerLabel"> Question</h6>
-                                <textarea name="" class="preAnsweredQuestionHolder" id="" cols="70" rows="4"></textarea>
+                                <textarea name="" class="preAnsweredQuestionHolder"  cols="70" rows="4"></textarea>
                             </div>
                             <div class="questionOrAnswerHolder">
                                 <h3 class="questionAnswerLabel">Answer</h6>
-                                <textarea name="" id="" class="preAnsweredQuestionHolder"cols="70" rows="4"></textarea>
+                                <textarea name=""  class="preAnsweredAnswerHolder"cols="70" rows="4"></textarea>
                             </div>
                         </div>
                        
@@ -523,11 +556,11 @@
                         <div class="questionAnswerHolder">
                             <div class="questionOrAnswerHolder">
                                 <h3 class="questionAnswerLabel"> Question</h6>
-                                <textarea name="" class="preAnsweredQuestionHolder" id="" cols="70" rows="4"></textarea>
+                                <textarea class="preAnsweredQuestionHolder" id="" cols="70" rows="4"></textarea>
                             </div>
                             <div class="questionOrAnswerHolder">
                                 <h3 class="questionAnswerLabel">Answer</h6>
-                                <textarea name="" id="" class="preAnsweredQuestionHolder"cols="70" rows="4"></textarea>
+                                <textarea class="preAnsweredAnswerHolder"cols="70" rows="4" ></textarea>
                             </div>
                         </div>
                        
@@ -551,7 +584,7 @@
                             </div>
                             <div class="questionOrAnswerHolder">
                                 <h3 class="questionAnswerLabel">Answer</h6>
-                                <textarea name="" id="" class="preAnsweredQuestionHolder"cols="70" rows="4"></textarea>
+                                <textarea name="" id="" class="preAnsweredAnswerHolder"cols="70" rows="4"></textarea>
                             </div>
                         </div>
                        

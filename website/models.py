@@ -416,12 +416,19 @@ class Result(db.Model):
     answered = db.Column(db.Boolean, unique=False)
     #tossup achieved?
     tossup = db.Column(db.Boolean, unique=False)
-    tossupQuestion = db.Column(db.String(2000), unique=False)
+    tossupQuestion = db.Column(db.String(2000), unique=False, default="")
+    #accepted answer
+    tossupAnswer = db.Column(db.String(2000), unique=False, default="")
     #bonuses achieved?
     bonus1 = db.Column(db.Boolean, unique=False)
-    bonus1Question = db.Column(db.String(2000), unique=False)
+    bonus1Question = db.Column(db.String(2000), unique=False, default="")
+        #accepted answer
+    bonus1Answer = db.Column(db.String(2000), unique=False,default="")
     bonus2 = db.Column(db.Boolean, unique=False)
-    bonus2Question = db.Column(db.String(2000), unique=False)
+    bonus2Question = db.Column(db.String(2000), unique=False, default="")
+        #accepted answer
+
+    bonus2Answer = db.Column(db.String(2000), unique=False, default="")
 
     #calculate the total points
     @property
@@ -443,6 +450,9 @@ class Result(db.Model):
             'tossupQuestion': self.tossupQuestion,
             'bonus1Question': self.bonus1Question,
             'bonus2Question': self.bonus2Question, 
+            'tossupAnswer': self.tossupAnswer,
+            'bonus1Answer': self.bonus1Answer,
+            'bonus2Answer': self.bonus2Answer,
             'answered': self.answered
         }
 

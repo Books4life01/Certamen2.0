@@ -14,7 +14,6 @@ socket.on('roomDataUpdate', data=>{
         curQuestionType = data.curQuestionType;
         roomData = data;
         $(".questionNum").text("Question #" + curQuestion);
-        resetResults();
     }
 
 });
@@ -53,7 +52,6 @@ socket.on("roomTeamsUpdate", (data) =>{
         let droppableZones = document.getElementsByClassName("drop-zone");
         for(let i = 0; i<4; i++){
             let teamKey = teams[i];
-            console.log("Team Key: " + teamKey);
 
             if(teamKey != "" && teamKey != null){
                 let teamDiv = document.getElementById(teamKey);
