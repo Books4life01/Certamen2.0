@@ -56,6 +56,9 @@ class Player(db.Model):
     @staticmethod
     def getPlayerByPrivate(privateKey):
         return db.session.query(Player).filter_by(privateKey=privateKey).first()
+    @staticmethod
+    def getPlayer(key):
+        return Player.getPlayerByPublic(key) or Player.getPlayerByPrivate(key)
 
     
 

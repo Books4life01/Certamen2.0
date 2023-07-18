@@ -61,12 +61,12 @@ def emitTournRooms(tournKey, brdcst):
     emit('tournRoomsUpdate', {"tournKey":tournKey, "rooms":rooms}, broadcast=brdcst)
 def emitRoomData(roomKey, brdcst):
     room = Room.getRoom(roomKey)
-    emit('roomDataUpdate', room.serialize, broadcast=brdcst)
+    emit('roomDataUpdate', room.serialize, broadcast=brdcst, include_self=True)
 def emitTournData(tournKey, brdcst):
     tourn = Tournament.getTourn(tournKey)
     emit('tournDataUpdate', tourn.serialize, broadcast=brdcst)
-def emitRoomLiveQuestionUpdate(roomKey, actionType, brdcst):
+def emitRoomLiveQuestionUpdate(roomKey, actionType, brdcst, player="None"):
     room = Room.getRoom(roomKey)
     roomData = room.serialize
-    emit('roomLiveQuestionUpdate', {"roomKey":roomKey, "curLiveQuestion":roomData["curLiveQuestion"], "curLiveQuestionAnswer":roomData["curLiveQuestionAnswer"], "liveQuestionPaused":roomData["liveQuestionPaused"], "curQuestionType":roomData["curQuestionType"], "curQuestion":roomData["currentQuestion"], "playersAttempted":roomData["playersAttempted"], "actionType":actionType}, broadcast=brdcst, include_self=True)
+    emit('roomLiveQuestionUpdate', {"roomKey":roomKey, "curLiveQuestion":roomData["curLiveQuestion"], "curLiveQuestionAnswer":roomData["curLiveQuestionAnswer"], "liveQuestionPaused":roomData["liveQuestionPaused"], "curQuestionType":roomData["curQuestionType"], "curQuestion":roomData["currentQuestion"], "playersAttempted":roomData["playersAttempted"], "actionType":actionType, "playerInitiated":player}, broadcast=brdcst, include_self=True)
     

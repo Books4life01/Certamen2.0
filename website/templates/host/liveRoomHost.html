@@ -4,7 +4,7 @@
 {%block script%}
 <script src="{{ url_for('static', filename='script/dragdrop.js') }}"></script>
 <script src="{{ url_for('static', filename='script/roomHostBaseCode.js') }}"></script>
-<script src="{{ url_for('static', filename='script/showQuestion.js') }}"></script>
+<script src="{{ url_for('static', filename='script/liveQuestion.js') }}"></script>
 <script>
     //Template Specific Variables
     let roomKey = {{ roomKey|tojson }};
@@ -13,23 +13,15 @@
     socket.on('connect', function(){
         console.log("Connected to server");
     });
-    socket.on('questionAnsweredUpdate', (data) => {
-        //Ensure that the room we are recieving data for is the room we are in
-        if(data['roomKey']==roomKey){
-            //
-        }
-    });
+    
     
 
     //set up event listeners
    function documentReady() {
         console.log("Document Ready");
-        ["tossupQuestion", "bonus1Question", "bonus2Question"].forEach(function(elem,index){
-            $("#"+elem+"Send").click( () => {
-                console.log("#"+elem+"Input")
-               sendQuestion($("#"+elem+"Input").val(), index);
+            $(".questionSend").click( () => {
+               sendQuestion($("#questionInput").val(), roomData.curQuestionType);
             });
-        });
         $("#teamLetter").on("change", () => {
            sendResultData();
         });
@@ -63,6 +55,22 @@
                 resetResults();
             }
         });
+        $("#acceptAnswer").click(()=>{
+            socket.emit("liveQuestionUpdate", data = {"roomKey": roomKey, "questionNum": curQuestion,"questionType": roomData.curQuestionType, "actionType":"acceptAnswer","questionNum":curQuestion})
+        })
+        $("#rejectAnswer").click(()=>{
+            socket.emit("liveQuestionUpdate", data = {"roomKey": roomKey, "questionNum": curQuestion,"questionType": roomData.curQuestionType, "actionType":"rejectAnswer","questionNum":curQuestion})
+        })
+        $(".questionTypeRefresher").click((e) => {
+            if (e.target.id=="tossup-tab"){
+                updateCurQuestionType(0);
+            }
+            else if(e.target.id=="bonus1-tab"){
+                updateCurQuestionType(1);
+            }
+            else updateCurQuestionType(2);
+            
+        });
     }
 
     /**
@@ -82,12 +90,6 @@
         out['bonus2']= results[curQuestion-1].bonus2 = $("#bonus2").prop("checked");
         out['roomKey'] =results[curQuestion-1].roomKey= {{ roomKey|tojson }};
         out['questionNum'] = curQuestion;
-        out['tossupQuestion'] = results[curQuestion-1].tossupQuestion;
-        out['bonus1Question'] = results[curQuestion-1].bonus1Question ;
-        out['bonus2Question'] = results[curQuestion-1].bonus1Question; 
-        out['tossupAnswer'] = results[curQuestion-1].tossupAnswer
-        out['bonus1Answer'] = results[curQuestion-1].bonus1Answer
-        out['bonus2Answer'] = results[curQuestion-1].bonus2Answer
         console.log("Saving and Sending");
         console.log(out);
         socket.emit("roomResultUpdate", data = out);
@@ -121,12 +123,6 @@
     function updateCurQuestionType(type){
         //update the current question type locally
         curQuestionType = type;
-        //hide or reveal the tab panes for the question types
-        let questionContainers = $(".questionContainer");
-        for(let i = 0; i<3; i++){
-            if(i==curQuestionType)questionContainers[i].addClass("active").addClass("show");
-            else questionContainers[i].removeClass("active").removeClass("show");
-        }        
 
         //update the current question type on the server
         socket.emit("roomCurQuestionTypeUpdate", data = {
@@ -148,11 +144,10 @@
             $("#playerNum").prop("selectedIndex",0);
             $("#bonus1").prop("checked", false);
             $("#bonus2").prop("checked", false);
-            ['tossup', 'bonus1', 'bonus2'].forEach((type) => {
-                $("#"+type+"QuestionSend").removeClass("hidden");
-                $("#"+type+"QuestionInput").removeClass("hidden");
-                $("#"+type+"QuestionView").addClass("hidden");
-            });
+            $(".questionSend").removeClass("hidden");
+            $(".questionInput").removeClass("hidden");
+            $(".questionView").addClass("hidden");
+
 
             //and create a new result object for this question
             results.push({
@@ -187,61 +182,13 @@
             $("#playerNum").prop("selectedIndex",parseInt(resultData.playerNum)-1);
             $("#bonus1").prop("checked", resultData.bonus1);
             $("#bonus2").prop("checked", resultData.bonus2);
-
-            //reset send Question divs
-            ['tossup', 'bonus1', 'bonus2'].forEach((type) => {
-                if(resultData[type+"Answer"] != ""){
-                    $("#"+type+"QuestionSend").addClass("hidden");
-                    $("#"+type+"QuestionInput").addClass("hidden");
-                    $("#"+type+"QuestionView").removeClass("hidden");
-                    
-                    $("#"+type+"QuestionView>div>div>.preAnsweredQuestionHolder").prop("disabled", true);
-                    $("#"+type+"QuestionView>div>div>.preAnsweredAnswerHolder").prop("disabled", true);
-                    $("#"+type+"QuestionView>div>div>.preAnsweredAnswerHolder").val(resultData[type+"Answer"]);
-                    $("#"+type+"QuestionView>div>div>.preAnsweredQuestionHolder").val(resultData[type+"Question"]);
-
-                }
-                else{
-                    $("#"+type+"QuestionSend").removeClass("hidden");
-                    $("#"+type+"QuestionInput").removeClass("hidden");
-                    $("#"+type+"QuestionView").addClass("hidden");
-                    $("#"+type+"QuestionInput").val("");
-                }
-                
-
-            });
             resultData = results[curQuestion-1];
             console.log("Result just reset")
             console.log(resultData)
 
         }
     }
-    function sendQuestion(text, type){
-        console.log(text);
-        //send the question to the server 
-        socket.emit("liveQuestionUpdate", data = {
-            "roomKey": {{ roomKey|tojson }},
-            "questionNum": curQuestion,
-            "questionType": type,
-            "fullQuestion": text, 
-            "actionType": "startBroadcast",
-        });
-        while(!paused && text.length > 0){
-            socket.emit("liveQuestionUpdate", data = {
-                "roomKey": {{ roomKey|tojson }},
-                "questionNum": curQuestion,
-                "questionType": type,
-                "actionType": "nextChar",
-                "nextChar": text[0]
-            });
-            text = text.substring(1);
-        }
-        //update the results locally
-        console.log(results)
-        console.log(["tossup", "bonus1", "bonus2"][type]+"Question")
-        results[curQuestion-1][["tossup", "bonus1", "bonus2"][type]+"Question"] = text;
-        resetResults();
-    }
+    
     
 
 </script>{%endblock%}
@@ -451,9 +398,13 @@
     .questionAnswerLabel{
         margin-right:1%;
     }
-    .hidden{
-        display: none;
+    #verifyAnswer{
+        display:flex;
+        flex-direction: row;
+        flex-wrap: nowrap;
     }
+    
+    
 </style>{%endblock%}
 
 
@@ -538,23 +489,16 @@
                 </div>
             </div>
             <ul class="nav nav-tabs " id="questionTypeSelector" role="tablist">
-                <li class="nav-item" role="presentation"><button class="nav-link active" id="tossup-tab" data-bs-toggle="tab" data-bs-target="#tossupQuestion" type="button" role="tab" aria-selected="true">Tossup</button></li>
-                <li class="nav-item" role="presentation"><button class="nav-link " id="bonus1-tab" data-bs-toggle="tab" data-bs-target="#bonus1Question" type="button" role="tab"  aria-selected="true">Bonus #1</button></li>
-                <li class="nav-item" role="presentation"><button class="nav-link" id="bonus2-tab" data-bs-toggle="tab" data-bs-target="#bonus2Question" type="button" role="tab" aria-selected="false">Bonus#2</button></li>
+                <li class="nav-item" role="presentation"><button class="nav-link active questionTypeRefresher" id="tossup-tab" data-bs-toggle="tab" data-bs-target="#tossupQuestion" type="button" role="tab" aria-selected="true">Tossup</button></li>
+                <li class="nav-item" role="presentation"><button class="nav-link questionTypeRefresher " id="bonus1-tab" data-bs-toggle="tab" data-bs-target="#bonus1Question" type="button" role="tab"  aria-selected="true">Bonus #1</button></li>
+                <li class="nav-item" role="presentation"><button class="nav-link questionTypeRefresher" id="bonus2-tab" data-bs-toggle="tab" data-bs-target="#bonus2Question" type="button" role="tab" aria-selected="false">Bonus#2</button></li>
             </ul>
-            <div class="tab-content">
-                <div class=" questionContainer container tab-pane fade show active" id="tossupQuestion">
+                <div class=" questionContainer container " >
                     <div class="questionSend container ">
-                        <button class="input-group-text btn btn-primary" id="tossupQuestionSend">Send Tossup</button>
-                        <textarea class="form-control" id="tossupQuestionInput" rows="5"></textarea> 
+                        <button class="input-group-text btn btn-primary" id="questionSendButton">Send Tossup</button>
+                        <textarea class="form-control" id="questionInput" rows="5"></textarea> 
                     </div>
-                    <div id="sendResults">
-                        <div id="liveQuestionReciever"></div>
-                        <div id="answerResponse" class="hidden">
-
-                        </div>
-                    </div>
-                    <div class = "questionView hidden" id="tossupQuestionView">
+                    <div class = "questionView hidden">
                         <div class="checkHolder">   
                             <h6 class="checkmarkLabel" >Question Already Sent</h6>
                             <i class="fas fa-check checkmark"></i>
@@ -570,57 +514,16 @@
                             </div>
                         </div>
                        
-                    </div>
-                    
-                </div>
-                <div class=" questionContainer container tab-pane fade" id="bonus1Question">
-                    <div class="questionSend container" >
-                        <button class="input-group-text btn btn-primary" id="bonus1QuestionSend">Send Bonus1</button>
-                        <textarea class="form-control" id="bonus1QuestionInput" rows="5"></textarea> 
-                    </div>
-                    <div class = "questionView hidden" id="bonus1QuestionView">
-                        <div class="checkHolder">   
-                            <h6 class="checkmarkLabel" >Question Already Sent</h6>
-                            <i class="fas fa-check checkmark"></i>
+                    </div>                
+                    <div id="sendResults" class="center">
+                        <div id="liveQuestionHostInfo">Live Results</div>
+                        <div id="liveQuestionReciever"></div>
+                        <div id="verifyAnswer" class="hidden">
+                            <button class="btn btn-success" id="acceptAnswer"><i class="fas fa-check"></i></button>
+                            <button class="btn btn-danger" id="rejectAnswer"><i class="fas fa-times"></i></button>
+                            <div id="liveAnswerReciever"></div>
                         </div>
-                        <div class="questionAnswerHolder">
-                            <div class="questionOrAnswerHolder">
-                                <h3 class="questionAnswerLabel"> Question</h6>
-                                <textarea class="preAnsweredQuestionHolder" id="" cols="70" rows="4"></textarea>
-                            </div>
-                            <div class="questionOrAnswerHolder">
-                                <h3 class="questionAnswerLabel">Answer</h6>
-                                <textarea class="preAnsweredAnswerHolder"cols="70" rows="4" ></textarea>
-                            </div>
-                        </div>
-                       
                     </div>
-                    
-                </div>
-                <div class=" questionContainer container tab-pane fade " id="bonus2Question">
-                    <div class="questionSend container" >
-                        <button class="input-group-text btn btn-primary" id="bonus2QuestionSend">Send Bonus2</button>
-                        <textarea class="form-control" id="bonus2QuestionInput" rows="5"></textarea> 
-                    </div>
-                    <div class = "questionView hidden" id="bonus2QuestionView">
-                        <div class="checkHolder">   
-                            <h6 class="checkmarkLabel" >Question Already Sent</h6>
-                            <i class="fas fa-check checkmark"></i>
-                        </div>
-                        <div class="questionAnswerHolder">
-                            <div class="questionOrAnswerHolder">
-                                <h3 class="questionAnswerLabel"> Question</h6>
-                                <textarea name="" class="preAnsweredQuestionHolder" id="" cols="70" rows="4"></textarea>
-                            </div>
-                            <div class="questionOrAnswerHolder">
-                                <h3 class="questionAnswerLabel">Answer</h6>
-                                <textarea name="" id="" class="preAnsweredAnswerHolder"cols="70" rows="4"></textarea>
-                            </div>
-                        </div>
-                       
-                    </div>
-                    
-                </div> 
             </div>
          </div>    
 

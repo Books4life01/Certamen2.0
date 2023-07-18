@@ -1,16 +1,13 @@
 {%extends "home/base.html"%}
 {%block title%}LiveRoomCLient{%endblock%}
+
 {%block script%}
-<script src="{{url_for('static', filename='script/showQuestion.js')}}""></script>
+<script src="{{url_for('static', filename='script/roomClientBaseCode.js')}}"></script>
+
 <script>
-    let socket = io.connect('http://192.168.4.127:8080');
-    let results = "";
     let roomKey = {{ roomKey|tojson }};
-    let playerKey = {{ player|tojson}};
-    socket.on('connect', function(){
-        socket.emit('roomClientConnect', data = {"roomKey": {{ roomKey|tojson }}});
-        socket.emit("roomDataRefreshRequest", data = {"roomKey": {{ roomKey|tojson }}});
-    });
+    let player = {{ player|tojson}};
+   
     socket.on("roomTeamsUpdate", (data) =>{
         //Ensure that the room we are recieving data for is the room we are in
         if (data.roomKey == {{ roomKey|tojson }}){
@@ -19,72 +16,24 @@
         }
     });
     
-    socket.on("incomingQuestion", (data) => {
-        //Ensure that the room we are recieving data for is the room we are in 
-
-        if (data.roomKey == {{ roomKey|tojson }}){
-            console.log(data)
-            $("#questionTitle").text("Question #" + data.questionNum + ": " + ["Toss Up", "Bonus1", "Bonus2"][data.questionType]);
-            $("#questionText").text("");
-            let question = data.questionText;
-            showText("#questionText", question, 100);
-        }
-    });
-    $(document).ready(function(){
-        onDocumentReady();
-    }); 
-    function onDocumentReady(){
+    
+    
+    function documentReady(){
         $(document).on("keypress", function(e){
             if(e.which == 32){
                 console.log("SPACE PRESSED");
-                paused = true;
-                startAsyncTimer(10);
-                socket.emit("pauseQuestion", data = {"roomKey": roomKey, "playerKey":playerKey, "amtQuestionSent":$("#questionText").val()})
+                socket.emit("liveQuestionUpdate", data = {"roomKey": roomKey, "player":player,"questionNum": curQuestion,"questionType": roomData.curQuestionType, "actionType":"pause","questionNum":curQuestion,  "answer":$("#answerInput").val()})
             }
             console.log("KEY PRESSED: " + e.which);
         });
         $("#submitAnswerButton").click(()=>{
             submitAnswer();
         })
-        function submitAnswer(){
-            socket.emit("answerSubmit", data = {"roomKey": roomKey, "playerKey":playerKey, "answer":$("#answerInput").val()})
-            paused = false;
-        }
+        
     }
-    function showText(target, message,  interval){
-        if (message.length>0 && paused == false){
-            $(target).append(message[0]);
-            message = message.substring(1);
-            setTimeout(function(){
-                showText(target, message, interval);
-            }, interval);
-        }
-        else return;
-    }
+</script>
+{%endblock%}
 
-    function startAsyncTimer(seconds){
-        $("#submitAnswer").removeClass("hidden");
-        var timer = setInterval(() =>{
-            if (seconds > 0 && paused){
-                seconds--;
-                $("#buzzInfo").text("Submit Answer In: " + seconds + " seconds");
-            }
-            else{
-                submitAnswer();
-                $("#buzzInfo").text("Time's Up! Answer Submitted");
-                $("#submitAnswer").addClass("hidden");
-                clearInterval(timer)
-                paused=false;
-                setTimeout(() => {
-                    $("#buzzInfo").text("Answer Submitted!");
-                }, 2000);
-
-            }
-        }, seconds*100);
-    }
-
-
-</script>{%endblock%}
 {%block styles%}<style>
     #currentQuestionHolder{
         font-size: 2em;
@@ -104,7 +53,7 @@
         margin-left: 5%;
         
     }
-    #questionText{
+    #liveQuestionReciever{
         border: 1px dotted blue;
         height: 50%;
         overflow: auto;
@@ -150,12 +99,15 @@
 
     <div id="currentQuestionHolder">
         <h1 class="center" id="questionTitle">Question #1</h1>
-        <div id="questionText"></div>
+        <div id="liveQuestionReciever"></div>
         <div id="questionAnswer">
-            <h6 id="buzzInfo">Press Space to Buzz in</h6>
+            <h6 id="liveQuestionClientInfo">Press Space to Buzz in</h6>
             <div class="hidden form-group"id="submitAnswer">
                 <textArea class="form-control" id="answerInput"></textArea>
                 <button class="input-group-text btn btn-primary"id="submitAnswerButton">Submit Answer</button>
+            </div>
+            <div id="liveAnswerReciever" class="hidden">
+    
             </div>
         </div>
         

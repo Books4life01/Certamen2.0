@@ -45,12 +45,7 @@ def on_roomResultUpdate( message):
             room.results[questionNum-1].playerNumber = message["playerNum"]
             room.results[questionNum-1].questionNum = questionNum
             room.results[questionNum-1].roomKey = message["roomKey"]
-            room.results[questionNum-1].tossupQuestion = message["tossupQuestion"]
-            room.results[questionNum-1].bonus1Question = message["bonus1Question"]
-            room.results[questionNum-1].bonus2Question = message["bonus2Question"]
-            room.results[questionNum-1].tossupAnswer = message["tossupAnswer"]
-            room.results[questionNum-1].bonus1Answer = message["bonus1Answer"]
-            room.results[questionNum-1].bonus2Answer = message["bonus2Answer"]
+            
         db.session.commit()
     #braodcast result update to all clients connected to the room
     emitRoomResults(roomPrivateKey, True)
@@ -68,7 +63,7 @@ def on_roomCurQuestionTypeUpdate(message):
     if room is None:
         emit("ERROR", "No room found with that private key")
     else:
-        room.results[message["curQuestion"]-1].curQuestionType = message["curQuestionType"]
+        room.curQuestionType = message["curQuestionType"]
         db.session.commit()
     #broadcast result update to all clients connected to the room
     emitRoomData(message["roomKey"], True)
@@ -85,11 +80,11 @@ def on_roomCurQuestionUpdate( message):
 
 
 def on_liveQuestionUpdate(data):
-    print("liveQuestionUpdate: " + data['actionType'])
-    print(data)
+    # print("liveQuestionUpdate: " + data['actionType'])
+    # print(data)
     #retrieve room
     roomPrivateKey = data["roomKey"]
-    room = Room.getRoomByPrivate(roomPrivateKey)
+    room = Room.getRoom(roomPrivateKey)
 
     #get result and question Type
     result = room.results[data["questionNum"]-1]
@@ -102,41 +97,46 @@ def on_liveQuestionUpdate(data):
         #reset the curent live question
         room.curLiveQuestion = ""
         #reset the current live question answer
-        room.liveQuestionAnswer = ""
+        room.curLiveQuestionAnswer = ""
         #reset the players who attempted
         room.clearAttemptedPlayers()
         #set the reuslts question to the live question
-        result.tossupQuestion = data['fullQuestion']
+        if questionType == 0:result.tossupQuestion = data['fullQuestion']
+        elif questionType == 1:result.bonus1Question = data['fullQuestion']
+        elif questionType == 2:result.bonus2Question = data['fullQuestion']
     elif actionType == "endBroadcast":
         #set the stored question and answers to the live question and answer
-        result.tossupQuestion = room.curLiveQuestion
-        result.tossupAnswer = room.curLiveQuestionAnswer
+        if questionType == 0:result.tossupAnswer = room.curLiveQuestionAnswer
+        elif questionType == 1:result.bonus1Answer = room.curLiveQuestionAnswer
+        elif questionType == 2:result.bonus2Answer = room.curLiveQuestionAnswer
+        
     elif actionType == "nextChar":
         #add the next character to the live question
         room.curLiveQuestion += data['nextChar']
     elif actionType == "pause":
         room.liveQuestionPaused = True
+        room.addAttemptedPlayer(data['player']['privateKey'])
     elif actionType == "attemptAnswer":
-        room.addAttemptedPlayer(data['playerKey'])
-        room.liveQuestionAnswer = data['attemptedAnswer']
+        room.curLiveQuestionAnswer = data['attemptedAnswer']
     elif actionType == "rejectAnswer":
-        room.liveQuestionAnswer = ""
-        room.liveQuestionPaused = False
+        room.curLiveQuestionAnswer = ""
+        room.curLiveQuestionPaused = False
     elif actionType == "acceptAnswer":
         #set the stored question and answers to the live question and answer
-        result.tossupQuestion = room.curLiveQuestion
-        result.tossupAnswer = room.curLiveQuestionAnswer
+        result.curLiveQuestion = result.tossupQuestion
+        if questionType == 0:result.tossupAnswer = room.curLiveQuestionAnswer
+        elif questionType == 1:result.bonus1Answer = room.curLiveQuestionAnswer
+        elif questionType == 2:result.bonus2Answer = room.curLiveQuestionAnswer
+        
+        
+        room.liveQuestionPaused=False
     db.session.commit()
     #broadcast live question update to all clients connected to the room including
-    emitRoomLiveQuestionUpdate(roomPrivateKey, data['actionType'], True)
-
-    
-
-    data['roomKey'] = room.publicKey
-    if room is None or not room.isLive:
-        emit("ERROR", "No room found with that private key")
-    else:
-        print("Sending live question update")
-        emit("incomingQuestion", data, broadcast=True, includes_self=True)
+    if(actionType=="pause" or actionType=="attemptAnswer" ):
+        emitRoomLiveQuestionUpdate(roomPrivateKey, data['actionType'], True, player =data['player'])
+    else: emitRoomLiveQuestionUpdate(roomPrivateKey, data['actionType'], True)
+    #if the actionType is acceptAnswer or endBroadcast then broadcast the room data
+    if(actionType=="acceptAnswer" or actionType=="endBroadcast"):
         emitRoomData(roomPrivateKey, True)
+        emitRoomResults(roomPrivateKey, True)
 

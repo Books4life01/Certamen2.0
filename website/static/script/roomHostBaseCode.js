@@ -23,6 +23,37 @@ socket.on('roomDataUpdate', data=>{
         curQuestionType = data.curQuestionType;
         roomData = data;
         $(".questionNum").text("Question #" + curQuestion);
+        let questionType = ['Tossup', 'Bonus#1', 'Bonus#2'][roomData.curQuestionType]
+        $("#questionSendButton").text("Send " + questionType);
+        $(".questionTypeRefresher").each((i, e) => {
+            if (i == curQuestionType){
+                e.classList.add("active");
+                
+            }else{
+                e.classList.remove("active");
+            }
+        });
+        //reset send Question div
+         questionType = ['tossup', 'bonus1', 'bonus2'][roomData.curQuestionType]
+         resultData = results[curQuestion-1];
+        if(resultData[questionType+"Answer"] != ""){
+            $(".questionSend").addClass("hidden");
+            $(".questionInput").addClass("hidden");
+            $(".questionView").removeClass("hidden");
+            
+            $(".preAnsweredQuestionHolder").prop("disabled", true);
+            $(".preAnsweredAnswerHolder").prop("disabled", true);
+            $(".preAnsweredAnswerHolder").val(resultData[questionType+"Answer"]);
+            $(".preAnsweredQuestionHolder").val(resultData[questionType+"Question"]);
+        }
+        else{
+            $(".questionSend").removeClass("hidden");
+            $(".questionInput").removeClass("hidden");
+            $(".questionView").addClass("hidden");
+            $(".questionInput").val("");
+        }
+        
+
     }
 });
 socket.on("tournTeamsUpdate", (data) => {
