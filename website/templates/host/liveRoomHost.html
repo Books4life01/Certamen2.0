@@ -4,6 +4,7 @@
 {%block script%}
 <script src="{{ url_for('static', filename='script/dragdrop.js') }}"></script>
 <script src="{{ url_for('static', filename='script/roomHostBaseCode.js') }}"></script>
+<script src="{{ url_for('static', filename='script/showQuestion.js') }}"></script>
 <script>
     //Template Specific Variables
     let roomKey = {{ roomKey|tojson }};
@@ -12,6 +13,13 @@
     socket.on('connect', function(){
         console.log("Connected to server");
     });
+    socket.on('questionAnsweredUpdate', (data) => {
+        //Ensure that the room we are recieving data for is the room we are in
+        if(data['roomKey']==roomKey){
+            //
+        }
+    });
+    
 
     //set up event listeners
    function documentReady() {
@@ -182,7 +190,7 @@
 
             //reset send Question divs
             ['tossup', 'bonus1', 'bonus2'].forEach((type) => {
-                if(resultData[type+"Question"] != ""){
+                if(resultData[type+"Answer"] != ""){
                     $("#"+type+"QuestionSend").addClass("hidden");
                     $("#"+type+"QuestionInput").addClass("hidden");
                     $("#"+type+"QuestionView").removeClass("hidden");
@@ -215,8 +223,19 @@
             "roomKey": {{ roomKey|tojson }},
             "questionNum": curQuestion,
             "questionType": type,
-            "questionText": text
+            "fullQuestion": text, 
+            "actionType": "startBroadcast",
         });
+        while(!paused && text.length > 0){
+            socket.emit("liveQuestionUpdate", data = {
+                "roomKey": {{ roomKey|tojson }},
+                "questionNum": curQuestion,
+                "questionType": type,
+                "actionType": "nextChar",
+                "nextChar": text[0]
+            });
+            text = text.substring(1);
+        }
         //update the results locally
         console.log(results)
         console.log(["tossup", "bonus1", "bonus2"][type]+"Question")
@@ -528,6 +547,12 @@
                     <div class="questionSend container ">
                         <button class="input-group-text btn btn-primary" id="tossupQuestionSend">Send Tossup</button>
                         <textarea class="form-control" id="tossupQuestionInput" rows="5"></textarea> 
+                    </div>
+                    <div id="sendResults">
+                        <div id="liveQuestionReciever"></div>
+                        <div id="answerResponse" class="hidden">
+
+                        </div>
                     </div>
                     <div class = "questionView hidden" id="tossupQuestionView">
                         <div class="checkHolder">   

@@ -2,7 +2,7 @@ from flask_socketio import emit
 from .. import db   
 from ..models import Player, Tournament, Room, Team, Result
 from .. import liveRoomClients
-from .refreshSocket import emitRoomResults, emitRoomData
+from .refreshSocket import emitRoomResults, emitRoomData, emitRoomLiveQuestionUpdate
 
 def on_teamAssignmentUpdate( message):
     #retrieve room Private Key
@@ -85,23 +85,51 @@ def on_roomCurQuestionUpdate( message):
 
 
 def on_liveQuestionUpdate(data):
-    print("liveQuestionUpdate")
+    print("liveQuestionUpdate: " + data['actionType'])
     print(data)
-    #retrieve request data
+    #retrieve room
     roomPrivateKey = data["roomKey"]
     room = Room.getRoomByPrivate(roomPrivateKey)
-    print(len(room.results))
 
+    #get result and question Type
     result = room.results[data["questionNum"]-1]
-
     questionType = data["questionType"]
-    if questionType == 0:
-        result.tossupQuestion = data["questionText"]
-    elif questionType == 1:
-        result.bonus1Question = data["questionText"]
-    elif questionType == 2:
-        result.bonus2Question = data["questionText"]
+
+    #get actionType
+    actionType = data["actionType"]
+
+    if actionType == "startBroadcast":
+        #reset the curent live question
+        room.curLiveQuestion = ""
+        #reset the current live question answer
+        room.liveQuestionAnswer = ""
+        #reset the players who attempted
+        room.clearAttemptedPlayers()
+        #set the reuslts question to the live question
+        result.tossupQuestion = data['fullQuestion']
+    elif actionType == "endBroadcast":
+        #set the stored question and answers to the live question and answer
+        result.tossupQuestion = room.curLiveQuestion
+        result.tossupAnswer = room.curLiveQuestionAnswer
+    elif actionType == "nextChar":
+        #add the next character to the live question
+        room.curLiveQuestion += data['nextChar']
+    elif actionType == "pause":
+        room.liveQuestionPaused = True
+    elif actionType == "attemptAnswer":
+        room.addAttemptedPlayer(data['playerKey'])
+        room.liveQuestionAnswer = data['attemptedAnswer']
+    elif actionType == "rejectAnswer":
+        room.liveQuestionAnswer = ""
+        room.liveQuestionPaused = False
+    elif actionType == "acceptAnswer":
+        #set the stored question and answers to the live question and answer
+        result.tossupQuestion = room.curLiveQuestion
+        result.tossupAnswer = room.curLiveQuestionAnswer
     db.session.commit()
+    #broadcast live question update to all clients connected to the room including
+    emitRoomLiveQuestionUpdate(roomPrivateKey, data['actionType'], True)
+
     
 
     data['roomKey'] = room.publicKey
@@ -109,6 +137,6 @@ def on_liveQuestionUpdate(data):
         emit("ERROR", "No room found with that private key")
     else:
         print("Sending live question update")
-        emit("incomingQuestion", data, broadcast=True)
+        emit("incomingQuestion", data, broadcast=True, includes_self=True)
         emitRoomData(roomPrivateKey, True)
-        
+

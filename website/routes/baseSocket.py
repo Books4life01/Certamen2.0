@@ -69,6 +69,5 @@ def on_roomClientConnect( message):
         emit("ERROR", "Invalid Room Key")
     else:
         #retrieve the privateKey
-        privateKey = room.privateKey
         #add the client to the room
         liveRoomClients[publicKey]["clients"].append(sid)

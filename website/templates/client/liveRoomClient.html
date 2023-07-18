@@ -1,9 +1,12 @@
 {%extends "home/base.html"%}
 {%block title%}LiveRoomCLient{%endblock%}
-{%block script%}<script>
-    let socket = io.connect('http://172.16.68.165:8080');
+{%block script%}
+<script src="{{url_for('static', filename='script/showQuestion.js')}}""></script>
+<script>
+    let socket = io.connect('http://192.168.4.127:8080');
     let results = "";
-    let paused = false;
+    let roomKey = {{ roomKey|tojson }};
+    let playerKey = {{ player|tojson}};
     socket.on('connect', function(){
         socket.emit('roomClientConnect', data = {"roomKey": {{ roomKey|tojson }}});
         socket.emit("roomDataRefreshRequest", data = {"roomKey": {{ roomKey|tojson }}});
@@ -28,16 +31,26 @@
         }
     });
     $(document).ready(function(){
+        onDocumentReady();
+    }); 
+    function onDocumentReady(){
         $(document).on("keypress", function(e){
             if(e.which == 32){
                 console.log("SPACE PRESSED");
                 paused = true;
                 startAsyncTimer(10);
+                socket.emit("pauseQuestion", data = {"roomKey": roomKey, "playerKey":playerKey, "amtQuestionSent":$("#questionText").val()})
             }
             console.log("KEY PRESSED: " + e.which);
         });
-    }); 
-
+        $("#submitAnswerButton").click(()=>{
+            submitAnswer();
+        })
+        function submitAnswer(){
+            socket.emit("answerSubmit", data = {"roomKey": roomKey, "playerKey":playerKey, "answer":$("#answerInput").val()})
+            paused = false;
+        }
+    }
     function showText(target, message,  interval){
         if (message.length>0 && paused == false){
             $(target).append(message[0]);
@@ -50,19 +63,22 @@
     }
 
     function startAsyncTimer(seconds){
-        $("#timer").removeClass("hidden");
+        $("#submitAnswer").removeClass("hidden");
         var timer = setInterval(() =>{
-            if (seconds > 0){
+            if (seconds > 0 && paused){
                 seconds--;
-                $("#timer").text("Submit Answer In: " + seconds + " seconds");
+                $("#buzzInfo").text("Submit Answer In: " + seconds + " seconds");
             }
             else{
-                $("#timer").text("Time's Up!");
+                submitAnswer();
+                $("#buzzInfo").text("Time's Up! Answer Submitted");
+                $("#submitAnswer").addClass("hidden");
                 clearInterval(timer)
                 paused=false;
                 setTimeout(() => {
-                    $("#timer").addClass("hidden");
+                    $("#buzzInfo").text("Answer Submitted!");
                 }, 2000);
+
             }
         }, seconds*100);
     }
@@ -90,9 +106,10 @@
     }
     #questionText{
         border: 1px dotted blue;
-        height: 200px;
+        height: 50%;
         overflow: auto;
     }
+    
     .container{
         position: relative;
         display: flex;
@@ -105,6 +122,24 @@
         height:500px;
 
     }
+    #submitAnswer{
+        display: flex;
+        flex-direction: row;
+    }
+    .hidden{
+        display:none !important;
+    }  
+    #questionAnswer{
+        height:20%;
+    } 
+    
+    #answerContainer{
+        border: 1px dotted yellow;
+        display: flex;
+        flex-direction: row;
+        flex-wrap: nowrap;
+        
+    } 
 </style>{%endblock%}
 
 {%block content%}
@@ -116,8 +151,14 @@
     <div id="currentQuestionHolder">
         <h1 class="center" id="questionTitle">Question #1</h1>
         <div id="questionText"></div>
-        <div id="questionAnswer"><h6>Press Space to Buzz in</h6></div>
-        <div id="timer"class="hidden"></div>
+        <div id="questionAnswer">
+            <h6 id="buzzInfo">Press Space to Buzz in</h6>
+            <div class="hidden form-group"id="submitAnswer">
+                <textArea class="form-control" id="answerInput"></textArea>
+                <button class="input-group-text btn btn-primary"id="submitAnswerButton">Submit Answer</button>
+            </div>
+        </div>
+        
     </div>
     
 </div>

@@ -190,7 +190,14 @@ class Room(db.Model):
     currentQuestion = db.Column(db.Integer, unique=False, default=1)  
     #active Question Type: so if tossup is being asked, or bonus1, or bonus2
     curQuestionType = db.Column(db.Integer, unique=False, default=0)#0=Tossup, 1=Bonus1, 2=Bonus2
-
+    #current Live Question: the question that is currently being asked
+    curLiveQuestion = db.Column(db.String(2000),  nullable=True, default="")
+    #current Live Question Answer: the attempted answer to the question that is currently being asked
+    curLiveQuestionAnswer = db.Column(db.String(2000),  nullable=True, default="")
+    #teamsAttempted: teams that have attempted to answer the question and failed
+    playersAttempted = db.Column(db.String(2000), unique=False, default=0)
+    #whether or not the question is paused for answer inspection
+    liveQuestionPaused = db.Column(db.Boolean, unique=False, default=False)
     #isLive determines if the room is live or not: it is live if a client is currently managing the room
     isLive = db.Column(db.Boolean, unique=False)
 
@@ -256,6 +263,17 @@ class Room(db.Model):
         elif teamKey == self.teamD and self.teamDPlayers > 0:
             self.teamDPlayers -= 1
         db.session.commit()
+    def addAttemptedPlayer(self, playerKey):
+        player = Player.getPlayer(playerKey)
+        if player == None: return False
+        self.playersAttempted += player.name + ", "
+        db.session.commit()
+        return True
+    def clearAttemptedPlayers(self):
+        self.playersAttempted = ""
+        db.session.commit()
+    def getAttemptedPlayers(self):
+        return self.playersAttempted.split(", ")
     def delete(self):
         db.session.delete(self)
         db.session.commit()
@@ -284,6 +302,10 @@ class Room(db.Model):
             'teamDPlayers': self.teamDPlayers,
             'curQuestionType': self.curQuestionType,
             'currentQuestion': self.currentQuestion,
+            'curLiveQuestion': self.curLiveQuestion,
+            'curLiveQuestionAnswer': self.curLiveQuestionAnswer,
+            'liveQuestionPaused': self.liveQuestionPaused,
+            'playersAttempted': self.getAttemptedPlayers()
         }
     #STATIC FUNCTIONS
     #see if a room exsists with either a piblic or private key
