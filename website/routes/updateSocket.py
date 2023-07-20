@@ -2,7 +2,7 @@ from flask_socketio import emit
 from .. import db   
 from ..models import Player, Tournament, Room, Team, Result
 from .. import liveRoomClients
-from .refreshSocket import emitRoomResults, emitRoomData, emitRoomLiveQuestionUpdate
+from .refreshSocket import emitRoomResults, emitRoomData, emitRoomLiveQuestionUpdate, emitTournData
 
 def on_teamAssignmentUpdate( message):
     #retrieve room Private Key
@@ -20,6 +20,7 @@ def on_teamAssignmentUpdate( message):
         db.session.commit()
     #TO-DO: send Updated team assignment to any clients connected to the room
     emitRoomData(roomPrivateKey, True)
+    emitTournData(room.superTournament, True)
 def on_roomResultUpdate( message):
     #retrieve request data
     roomPrivateKey = message["roomKey"]

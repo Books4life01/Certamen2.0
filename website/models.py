@@ -256,7 +256,8 @@ class Room(db.Model):
         return False
     #removes a player from the room given a teamKey and decrements the number of players in the team
     #eamKey is the private key of the team
-    def removeLivePlayer(self, teamKey):
+    def removeLivePlayer(self, playerKey):
+        teamKey = Player.getPlayer(playerKey).superTeam
         if teamKey == self.teamA and self.teamAPlayers > 0:
             self.teamAPlayers -= 1
         elif teamKey == self.teamB and self.teamBPlayers > 0:

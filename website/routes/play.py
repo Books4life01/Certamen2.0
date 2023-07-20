@@ -40,7 +40,12 @@ def room():
     elif player == None:
         flash("Invalid Player Key")
         return redirect(url_for('play.home'))
+    elif not room.canCompete(player.privateKey):
+        flash("Team Occupancy Full")
+        return redirect(url_for('play.home'))
     else:
+        room.addLivePlayer(player.privateKey)
+        db.session.commit()
         return render_template("client/liveRoomClient.html", roomKey=roomKey, player=player.serialize)
 #______________ INSTANTANEOUS ROUTE__________
 @play.route('/joinTourn')

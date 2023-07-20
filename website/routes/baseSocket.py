@@ -27,10 +27,13 @@ def on_disconnect():
             db.session.commit()
             #send rooms update to all sockets
             on_tournDataRefreshRequest({"tournKey": Room.getRoomByPublic(key).superTournament}, brdcst=True)
-        elif socketClient in room["clients"]:
+        elif any(client for client in room["clients"] if client['id']==socketClient):
             #if the client is a client in the room
+            client = next(client for client in room["clients"] if client['id']==socketClient)
             #remove the client from the room
-            room["clients"].remove(socketClient)
+            room["clients"].remove(client)
+            #remove live player from room
+            Room.getRoomByPublic(key).removeLivePlayer(client["playerKey"])
     print(str(socketClient) + " Disconnected")
     print("CUrrent Live ROoms")
     print(liveRoomClients)
@@ -70,4 +73,5 @@ def on_roomClientConnect( message):
     else:
         #retrieve the privateKey
         #add the client to the room
-        liveRoomClients[publicKey]["clients"].append(sid)
+        liveRoomClients[publicKey]["clients"].append({"id":sid, "playerKey":message["playerKey"]})
+        print(liveRoomClients)

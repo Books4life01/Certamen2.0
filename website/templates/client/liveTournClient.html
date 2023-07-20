@@ -1,51 +1,23 @@
 {%extends "home/base.html"%}
 {%block script%}<script>
-    const socket = io.connect('http://192.168.4.127:8080');
-
+    const socket = io.connect('http://172.16.68.165:8080');
+    let tournData = {};
     socket.on('connect', function(){
         socket.emit('tournDataRefreshRequest', data = {"tournKey": {{ tournKey|tojson }}});
     });
+    socket.on('tournDataUpdate', (data)=>{
+        tournData = data;
+        resetAvailableRooms();
+    });
+
     
     socket.on('tournRoomsUpdate', function(data){
         //Ensure that the tournament we are looking at is the same as the one we are recieving data for
         if (data.tournKey == {{ tournKey|tojson }}) {
         
             console.log("Rooms Refresh Recieved")
-            //clear the available rooms holder
-            $("#availableRoomsHolder").empty();
-            var labelRoomDiv = $("<div class='room'><h6>Room Name</h6><h6>Join Room</h6><h6>Public Key</h6><h6>Status</h6></div>")
-            $("#availableRoomsHolder").append(labelRoomDiv);
-            data.rooms.forEach(room => {
-                //Only show rooms that are live
-                //create a div for the room
-                var roomDiv = $('<div class="room"></div>');
-                //create a div for the room name
-                var roomNameDiv = $('<h4 class="roomName"></h4>').text(room['name']);
-                //create a div for the room public key
-                var roomKeyDiv = $('<h4 class="roomKey"></h4>').text(room['publicKey']);
-                //create a div for the room status
-                var roomStatus = $('<h4 class="roomStatus"></h4>').text(room['isLive'] ? "Live" : "Not Live");
-                //change color of room status depending on if the room is live or not
-                roomStatus.css("color", room['isLive'] ? "green" : "red");
-                //create a button to join the room
-                var joinRoomButton = $('<button class="joinRoomButton"></button>').text("SPECTATE");
-                //if the player's team is in the room check to see if they can compete
-                ['teamA', 'teamB', 'teamC', 'teamD'].forEach(team =>{
-                    if('{{player['superTeam']}}' == room[team] && room[team+'Players']<4){
-                        joinRoomButton.text("COMPETE");
-                        joinRoomButton.click(function(){
-                            window.location.href = "/play/room?roomKey="+room['publicKey']+"&playerKey={{player['privateKey']}}";
-                        });
-                    }
-                });
-                //attach the room name and key to the room div
-                roomDiv.append(roomNameDiv);
-                roomDiv.append(joinRoomButton);
-                roomDiv.append(roomKeyDiv);
-                roomDiv.append(roomStatus);
-                //attach the room div to the available rooms holder
-                $("#availableRoomsHolder").append(roomDiv);
-            });
+            resetAvailableRooms();
+            
         }
     });
     socket.on("ERROR", data =>{
@@ -55,6 +27,43 @@
     $("document").ready(function(){
         toastFlashedMessages();
     });
+    function resetAvailableRooms(){
+        //clear the available rooms holder
+        $("#availableRoomsHolder").empty();
+        var labelRoomDiv = $("<div class='room'><h6>Room Name</h6><h6>Join Room</h6><h6>Public Key</h6><h6>Status</h6></div>")
+        $("#availableRoomsHolder").append(labelRoomDiv);
+        tournData.rooms.forEach(room => {
+            //Only show rooms that are live
+            //create a div for the room
+            var roomDiv = $('<div class="room"></div>');
+            //create a div for the room name
+            var roomNameDiv = $('<h4 class="roomName"></h4>').text(room['name']);
+            //create a div for the room public key
+            var roomKeyDiv = $('<h4 class="roomKey"></h4>').text(room['publicKey']);
+            //create a div for the room status
+            var roomStatus = $('<h4 class="roomStatus"></h4>').text(room['isLive'] ? "Live" : "Not Live");
+            //change color of room status depending on if the room is live or not
+            roomStatus.css("color", room['isLive'] ? "green" : "red");
+            //create a button to join the room
+            var joinRoomButton = $('<button class="joinRoomButton"></button>').text("SPECTATE");
+            //if the player's team is in the room check to see if they can compete
+            ['teamA', 'teamB', 'teamC', 'teamD'].forEach(team =>{
+                if('{{player['superTeam']}}' == room[team] && room[team+'Players']<4){
+                    joinRoomButton.text("COMPETE");
+                    joinRoomButton.click(function(){
+                        window.location.href = "/play/room?roomKey="+room['publicKey']+"&playerKey={{player['privateKey']}}";
+                    });
+                }
+            });
+            //attach the room name and key to the room div
+            roomDiv.append(roomNameDiv);
+            roomDiv.append(joinRoomButton);
+            roomDiv.append(roomKeyDiv);
+            roomDiv.append(roomStatus);
+            //attach the room div to the available rooms holder
+            $("#availableRoomsHolder").append(roomDiv);
+        });
+    }
 
     function toastFlashedMessages(){
         //Toast all flashed messages: specifically flashing player Key
