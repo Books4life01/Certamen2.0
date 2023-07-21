@@ -14,6 +14,7 @@
             let teams = data.teams;
             console.log(teams);
         }
+        
     });
     
     
@@ -29,6 +30,16 @@
         $("#submitAnswerButton").click(()=>{
             submitAnswer();
         })
+
+        for(let i = 0; i < 2; i++){
+            $('<i class="fa-solid fa-user"></i>').insertBefore("#rightLabel");
+            $('<i class="fa-solid fa-user"></i>').insertBefore("#bottomLabel");
+            $('<i class="fa-solid fa-user"></i>').insertAfter("#topLabel");
+            $('<i class="fa-solid fa-user"></i>').insertAfter("#leftLabel");
+
+
+
+        }
         
     }
 </script>
@@ -41,16 +52,15 @@
         text-align: center;
         border: 1px dotted  white;
         width:50%;
-        height:300px;
-        margin-left: 5%;
-        margin-right:5%;
+        height:60%;
+        margin: 0 0;
     }
     #pastQuestions{
         border: 1px dotted orange;
         border-radius: 25px;
         width:35%;
         height:80%;
-        margin-left: 5%;
+        margin-left: 1%;
         
     }
     #liveQuestionReciever{
@@ -89,12 +99,70 @@
         flex-wrap: nowrap;
         
     } 
+    .verticalTeamHolder{
+        display: flex;
+        flex-direction: column;
+        justify-content: space-evenly;
+        align-items: center;
+        width:5%;
+        height:60%;
+        margin:20% 1%;
+        border: 1px solid purple;
+        flex-wrap: wrap;
+    }
+    #topTeam{
+        position: absolute;
+        display: flex;
+        flex-direction: row;
+        justify-content: space-evenly;
+        align-items: center;
+        width:50%;
+        height:10%;
+        top:9%;
+        left:43%;
+        border: 1px solid purple;
+        flex-wrap: wrap;
+    }
+    #bottomTeam{
+        position: absolute;
+        display: flex;
+        flex-direction: row;
+        justify-content: space-evenly;
+        align-items: center;
+        width:50%;
+        height:10%;
+        bottom:9%;
+        left:43%;
+        border: 1px solid purple;
+        flex-wrap: wrap;
+    }
+    .horizantalTeamLabel{
+        flex-basis:100%;
+        text-align: center;
+    }
+    .verticalTeamLabel{
+        flex-basis:100%;
+        text-align: center;
+        text-orientation: upright;
+        writing-mode: vertical-rl;
+    }
+    
 </style>{%endblock%}
 
 {%block content%}
 <div class="container">
     <div id="pastQuestions">
 
+    </div>
+    
+    <div id="topTeam">
+        <div class="horizantalTeamLabel" id="topLabel"> Team A</div>
+    </div>
+    <div id="bottomTeam">
+        <div class="horizantalTeamLabel" id="bottomLabel"> Team C</div>
+    </div>
+    <div class="verticalTeamHolder" id="leftTeam">
+        <div class="verticalTeamLabel" id="leftLabel"> Team D</div>
     </div>
 
     <div id="currentQuestionHolder">
@@ -107,11 +175,15 @@
                 <button class="input-group-text btn btn-primary"id="submitAnswerButton">Submit Answer</button>
             </div>
             <div id="liveAnswerReciever" class="hidden">
-    
             </div>
         </div>
         
     </div>
+    <div class="verticalTeamHolder" id="rightTeam">
+        <div class="verticalTeamLabel" id="rightLabel"> Team B</div>
+
+    </div>
+
     
 </div>
 {%endblock%}

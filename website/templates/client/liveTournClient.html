@@ -1,6 +1,6 @@
 {%extends "home/base.html"%}
 {%block script%}<script>
-    const socket = io.connect('http://172.16.68.165:8080');
+    const socket = io.connect('http://192.168.4.127:8080');
     let tournData = {};
     socket.on('connect', function(){
         socket.emit('tournDataRefreshRequest', data = {"tournKey": {{ tournKey|tojson }}});
@@ -34,6 +34,7 @@
         $("#availableRoomsHolder").append(labelRoomDiv);
         tournData.rooms.forEach(room => {
             //Only show rooms that are live
+            if(!room['isLive']) return;
             //create a div for the room
             var roomDiv = $('<div class="room"></div>');
             //create a div for the room name
@@ -132,6 +133,8 @@
        margin-left: 5%;
         margin-right: 5%;
     }
+
+    
     
 </style>{%endblock%}
 
