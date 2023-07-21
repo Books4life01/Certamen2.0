@@ -34,7 +34,7 @@ def create_app():
     app.register_blueprint(play, url_prefix="/play", db=db)
     app.register_blueprint(host, url_prefix="/host", db=db)
     app.register_blueprint(manage, url_prefix="/host/manage", db=db)
-
+    
     #importing the models from models.py
     from .models import Player, Tournament, Room, Team, Result
     #create the database

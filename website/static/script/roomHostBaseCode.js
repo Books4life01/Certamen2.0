@@ -2,7 +2,7 @@
 let curQuestion = 1;
 let results = [];
 let roomData = {};
-const socket = io.connect('http://192.168.4.127:8080');
+const socket = io.connect('http://172.16.68.165:8080');
 
 //Document Ready
 $(document).ready(() => {
@@ -34,23 +34,25 @@ socket.on('roomDataUpdate', data=>{
             }
         });
         //reset send Question div
-         questionType = ['tossup', 'bonus1', 'bonus2'][roomData.curQuestionType]
-         resultData = results[curQuestion-1];
-        if(resultData[questionType+"Answer"] != ""){
-            $(".questionSend").addClass("hidden");
-            $(".questionInput").addClass("hidden");
-            $(".questionView").removeClass("hidden");
-            
-            $(".preAnsweredQuestionHolder").prop("disabled", true);
-            $(".preAnsweredAnswerHolder").prop("disabled", true);
-            $(".preAnsweredAnswerHolder").val(resultData[questionType+"Answer"]);
-            $(".preAnsweredQuestionHolder").val(resultData[questionType+"Question"]);
-        }
-        else{
-            $(".questionSend").removeClass("hidden");
-            $(".questionInput").removeClass("hidden");
-            $(".questionView").addClass("hidden");
-            $(".questionInput").val("");
+        if(results.length > curQuestion){//IMPORTANT temporary patch figure this out later
+            questionType = ['tossup', 'bonus1', 'bonus2'][roomData.curQuestionType]
+            resultData = results[curQuestion-1];
+            if(resultData[questionType+"Answer"] != ""){
+                $(".questionSend").addClass("hidden");
+                $(".questionInput").addClass("hidden");
+                $(".questionView").removeClass("hidden");
+                
+                $(".preAnsweredQuestionHolder").prop("disabled", true);
+                $(".preAnsweredAnswerHolder").prop("disabled", true);
+                $(".preAnsweredAnswerHolder").val(resultData[questionType+"Answer"]);
+                $(".preAnsweredQuestionHolder").val(resultData[questionType+"Question"]);
+            }
+            else{
+                $(".questionSend").removeClass("hidden");
+                $(".questionInput").removeClass("hidden");
+                $(".questionView").addClass("hidden");
+                $(".questionInput").val("");
+            }
         }
         
 
