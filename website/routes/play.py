@@ -44,7 +44,6 @@ def room():
         flash("Team Occupancy Full")
         return redirect(url_for('play.home'))
     else:
-        room.addLivePlayer(player.privateKey)
         db.session.commit()
         return render_template("client/liveRoomClient.html", roomKey=roomKey, player=player.serialize)
 #______________ INSTANTANEOUS ROUTE__________

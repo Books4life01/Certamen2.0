@@ -3,7 +3,7 @@ from flask import request
 from .. import db
 from ..models import Player, Tournament, Room, Team, Result
 from .. import liveRoomClients
-from .refreshSocket import on_roomDataRefreshRequest, on_tournDataRefreshRequest
+from .refreshSocket import emitRoomData, on_roomDataRefreshRequest, on_tournDataRefreshRequest
 #Manage Connection
 def on_connect():
     print("Connected with sid of " + str(request.sid))
@@ -74,4 +74,13 @@ def on_roomClientConnect( message):
         #retrieve the privateKey
         #add the client to the room
         liveRoomClients[publicKey]["clients"].append({"id":sid, "playerKey":message["playerKey"]})
+        #update the playerCount to the database
+        for letter in ['A','B','C','D']:
+            setattr(room, 'team' + letter + 'Players',0)
+            for player in liveRoomClients[publicKey]["clients"]:
+                player = Player.getPlayer(player["playerKey"])
+                if player.superTeam == getattr(room, 'team' + letter):
+                    setattr(room, 'team' + letter + 'Players',getattr(room, 'team' + letter + 'Players')+1)
+        db.session.commit()
         print(liveRoomClients)
+        emitRoomData(room.privateKey, brdcst=True)

@@ -2,7 +2,7 @@
 let curQuestion = 1;
 let results = [];
 let roomData = {};
-const socket = io.connect('http://172.16.68.165:8080');
+const socket = io.connect('http://192.168.4.127:8080');
 //Document Ready
 $(document).ready(() => {
     //call template specific document ready function

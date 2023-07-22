@@ -16,6 +16,23 @@
         }
         
     });
+    socket.on("roomParticipantUpdate", (data)=>{
+        if(data["roomKey"]==roomKey){
+            let players = JSON.parse(data['participants']);
+            console.log(players);
+            ['A','B','C','D'].forEach((letter) =>{
+                players.forEach((player)=>{
+                    console.log(roomData["team" + letter] + " " + player['teamKey']);
+                    if(roomData["team" + letter] == player['teamKey']){
+                        console.log('#' + letter + 'Label');
+                        $('<i class="fa-solid fa-user"></i>').attr("title", player["name"]).insertBefore('#' + letter + 'Label');
+                    }
+                })
+            });
+          
+        }
+        
+    })
     
     
     
@@ -32,15 +49,7 @@
             submitAnswer();
         })
 
-        for(let i = 0; i < 2; i++){
-            $('<i class="fa-solid fa-user"></i>').insertBefore("#rightLabel");
-            $('<i class="fa-solid fa-user"></i>').insertBefore("#bottomLabel");
-            $('<i class="fa-solid fa-user"></i>').insertAfter("#topLabel");
-            $('<i class="fa-solid fa-user"></i>').insertAfter("#leftLabel");
-
-
-
-        }
+       
         
     }
 </script>
@@ -157,13 +166,13 @@
     </div>
     
     <div id="topTeam">
-        <div class="horizantalTeamLabel" id="topLabel"> Team A</div>
+        <div class="horizantalTeamLabel" id="ALabel"> Team A</div>
     </div>
     <div id="bottomTeam">
-        <div class="horizantalTeamLabel" id="bottomLabel"> Team C</div>
+        <div class="horizantalTeamLabel" id="CLabel"> Team C</div>
     </div>
     <div class="verticalTeamHolder" id="leftTeam">
-        <div class="verticalTeamLabel" id="leftLabel"> Team D</div>
+        <div class="verticalTeamLabel" id="DLabel"> Team D</div>
     </div>
 
     <div id="currentQuestionHolder">
@@ -181,7 +190,7 @@
         
     </div>
     <div class="verticalTeamHolder" id="rightTeam">
-        <div class="verticalTeamLabel" id="rightLabel"> Team B</div>
+        <div class="verticalTeamLabel" id="BLabel"> Team B</div>
 
     </div>
 

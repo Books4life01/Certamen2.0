@@ -1,7 +1,8 @@
+import json
 from flask_socketio import  emit
 from .. import db
 from ..models import Player, Tournament, Room, Team, Result
-
+from .. import liveRoomClients
 #On data Refresh Request
 def on_tournDataRefreshRequest( message, brdcst=False):
     print(message)
@@ -62,6 +63,7 @@ def emitTournRooms(tournKey, brdcst):
 def emitRoomData(roomKey, brdcst):
     room = Room.getRoom(roomKey)
     emit('roomDataUpdate', room.serialize, broadcast=brdcst, include_self=True)
+    emit('roomParticipantUpdate', {"roomKey":roomKey, "participants":json.dumps(list(map(lambda client: {"playerKey":client['playerKey'], "teamKey":Player.getPlayer(client["playerKey"]).superTeam, "name":Player.getPlayer(client['playerKey']).name},liveRoomClients[room.publicKey]["clients"])))if room.publicKey in liveRoomClients else []}, broadcast=brdcst, include_self=True)
 def emitTournData(tournKey, brdcst):
     tourn = Tournament.getTourn(tournKey)
     emit('tournDataUpdate', tourn.serialize, broadcast=brdcst)
