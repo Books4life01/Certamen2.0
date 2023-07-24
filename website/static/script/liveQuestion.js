@@ -2,45 +2,77 @@ let paused = false;
 let liveQuestionReciever = "liveQuestionReciever";
 //socket methods
 socket.on("roomLiveQuestionUpdate", (data) =>{
-    let actionType = data.actionType;
-    console.log("action Type" + actionType);
-    //update the room Data provided
-    roomData.curLiveQuestionAnswer = data.curLiveQuestionAnswer;
-    roomData.curLiveQuestion = data.curLiveQuestion;
-    roomData.curQuestionType = data.curQuestionType;
-    roomData.liveQuestionPaused = data.liveQuestionPaused 
+    if(data.publicKey == roomKey || data.privateKey == roomKey){
+        let actionType = data.actionType;
+        console.log("action Type" + actionType);
+        //update the room Data provided
+        roomData.curLiveQuestionAnswer = data.curLiveQuestionAnswer;
+        roomData.curLiveQuestion = data.curLiveQuestion;
+        roomData.curQuestionType = data.curQuestionType;
+        roomData.liveQuestionPaused = data.liveQuestionPaused 
 
-    if (actionType == "startBroadcast"){
-        $("#liveQuestionClientInfo").text("Press Space to Buzz in");
-    }
-   
-    else if (actionType == "nextChar"){
-        $("#liveQuestionReciever").text(data.curLiveQuestion);
-    }
-    else if (actionType == "pause" ){
-        console.log(data)
-        paused = true;
-        startAsyncTimer(10, playerName=data.playerInitiated['name']);
-    }
-    else if(actionType== "attemptAnswer"){
-        console.log("attemptAnswer" + data.curLiveQuestionAnswer)
-        //show the verifyAnswer div
-        $("#verifyAnswer").removeClass("hidden");
-        $("#liveAnswerReciever").text(data.curLiveQuestionAnswer);
-    }
-    else if (actionType == "rejectAnswer"){
-        //show the verifyAnswer div
-        $("#verifyAnswer").addClass("hidden");
-        $("#liveQuestionClientInfo").text("Answer Rejected! Try Again");
-        paused=false;
+        if (actionType == "startBroadcast"){
+            $("#liveQuestionClientInfo").text("Press Space to Buzz in");
+        }
+    
+        else if (actionType == "nextChar"){
+            $("#liveQuestionReciever").text(data.curLiveQuestion);
+        }
+        else if (actionType == "pause" ){
+            console.log(data)
+            paused = true;
+            startAsyncTimer(10, playerName=data.playerInitiated['name']);
+            $("#" + data.playerInitiated['privateKey']).css("color", "yellow");
+        }
+        else if(actionType== "attemptAnswer"){
+            console.log("attemptAnswer" + data.curLiveQuestionAnswer)
+            //show the verifyAnswer div
+            $("#verifyAnswer").removeClass("hidden");
+            $("#liveAnswerReciever").text(data.curLiveQuestionAnswer);
+        }
+        else if (actionType == "rejectAnswer"){
+            //show the verifyAnswer div
+            $("#verifyAnswer").addClass("hidden");
+            $("#liveQuestionClientInfo").text("Answer Rejected! Try Again");
+            paused=false;
 
+        }
+        else if (actionType == "acceptAnswer"){
+            //show the verifyAnswer div
+            $("#verifyAnswer").addClass("hidden");
+            $("#liveQuestionClientInfo").text("Answer Accepted!");
+            $("#liveQuestionReciever").text(data.curLiveQuestion);
+            paused=false;
+        }
+        if(data.forEach != ""){
+            data.playersAttempted.forEach(player => {
+                if(player != data.playerInitiated['privateKey'] && player != ""){
+                    $("#" + player).css("color", "red");
+                }
+                
+            });
+        }
     }
-    else if (actionType == "acceptAnswer"){
-        //show the verifyAnswer div
-        $("#verifyAnswer").addClass("hidden");
-        $("#liveQuestionClientInfo").text("Answer Accepted!");
-        $("#liveQuestionReciever").text(data.curLiveQuestion);
-        paused=false;
+    
+});
+socket.on("roomParticipantUpdate", (data)=>{
+    if(data.publicKey==roomKey||data.privateKey==roomKey){
+        let players = JSON.parse(data['participants']);
+        console.log(players);
+        $('.teamHolder>i').each((index, value)=>{
+           value.remove();
+        });
+        ['A','B','C','D'].forEach((letter) =>{
+            players.forEach((player)=>{
+                console.log(roomData["team" + letter] + " " + player['teamKey']);
+                if(roomData["team" + letter] == player['teamKey']){
+                    console.log('#' + letter + 'Label');
+                    if(letter == 'B' || letter == 'C')$('<i class="fa-solid fa-user"></i>').attr("title", player["name"]).attr("id", player['playerKey']).insertBefore('#' + letter + 'Label');
+                    else $('<i class="fa-solid fa-user"></i>').attr("title", player["name"]).attr("id", player['playerKey']).insertAfter('#' + letter + 'Label');
+                }
+            })
+        });
+      
     }
     
 })

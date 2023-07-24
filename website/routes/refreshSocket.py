@@ -63,12 +63,12 @@ def emitTournRooms(tournKey, brdcst):
 def emitRoomData(roomKey, brdcst):
     room = Room.getRoom(roomKey)
     emit('roomDataUpdate', room.serialize, broadcast=brdcst, include_self=True)
-    emit('roomParticipantUpdate', {"roomKey":roomKey, "participants":json.dumps(list(map(lambda client: {"playerKey":client['playerKey'], "teamKey":Player.getPlayer(client["playerKey"]).superTeam, "name":Player.getPlayer(client['playerKey']).name},liveRoomClients[room.publicKey]["clients"])))if room.publicKey in liveRoomClients else []}, broadcast=brdcst, include_self=True)
+    emit('roomParticipantUpdate', {"privateKey":room.privateKey,"publicKey":room.publicKey, "participants":json.dumps(list(map(lambda client: {"playerKey":client['playerKey'], "teamKey":Player.getPlayer(client["playerKey"]).superTeam, "name":Player.getPlayer(client['playerKey']).name},liveRoomClients[room.publicKey]["clients"])))if room.publicKey in liveRoomClients else []}, broadcast=brdcst, include_self=True)
 def emitTournData(tournKey, brdcst):
     tourn = Tournament.getTourn(tournKey)
     emit('tournDataUpdate', tourn.serialize, broadcast=brdcst)
 def emitRoomLiveQuestionUpdate(roomKey, actionType, brdcst, player="None"):
     room = Room.getRoom(roomKey)
     roomData = room.serialize
-    emit('roomLiveQuestionUpdate', {"roomKey":roomKey, "curLiveQuestion":roomData["curLiveQuestion"], "curLiveQuestionAnswer":roomData["curLiveQuestionAnswer"], "liveQuestionPaused":roomData["liveQuestionPaused"], "curQuestionType":roomData["curQuestionType"], "curQuestion":roomData["currentQuestion"], "playersAttempted":roomData["playersAttempted"], "actionType":actionType, "playerInitiated":player}, broadcast=brdcst, include_self=True)
+    emit('roomLiveQuestionUpdate', {"privateKey":room.privateKey,"publicKey":room.publicKey, "curLiveQuestion":roomData["curLiveQuestion"], "curLiveQuestionAnswer":roomData["curLiveQuestionAnswer"], "liveQuestionPaused":roomData["liveQuestionPaused"], "curQuestionType":roomData["curQuestionType"], "curQuestion":roomData["currentQuestion"], "playersAttempted":roomData["playersAttempted"], "actionType":actionType, "playerInitiated":player}, broadcast=brdcst, include_self=True)
     

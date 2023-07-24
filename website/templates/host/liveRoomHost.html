@@ -19,7 +19,7 @@
     //set up event listeners
    function documentReady() {
         console.log("Document Ready");
-            $(".questionSend").click( () => {
+            $("#questionSendButton").click( () => {
                sendQuestion($("#questionInput").val(), roomData.curQuestionType);
             });
         $("#teamLetter").on("change", () => {
@@ -356,8 +356,10 @@
     }
     .questionSend{
         display:inline-flex;
-        margin: 0;
-        padding:0;
+        justify-content: center;
+        margin-left:12.5%;
+        width:75%;
+        
     }
     .checkmark {
         color: green; 
@@ -384,10 +386,7 @@
         align-items: center;
 
     }
-    .questionView, .questionSend{
-        margin-top:5%;
 
-    }
     .checkmarkLabel{
         font-size:12px; 
         margin-top: 1%;
@@ -403,6 +402,72 @@
         flex-direction: row;
         flex-wrap: nowrap;
     }
+    .questionContainer{
+        position: relative;
+    }
+    .horizantalTeamLabel{
+        flex-basis:100%;
+        text-align: center;
+    }
+    .verticalTeamLabel{
+        flex-basis:100%;
+        text-align: center;
+        /**text-orientation: upright;**/
+        height: 100%;
+    }
+    #leftTeam>.verticalTeamLabel{
+        writing-mode: vertical-lr;
+    }
+    #rightTeam>.verticalTeamLabel{
+        writing-mode: vertical-lr;
+        
+    }
+    #topTeam{
+        width:60%;
+        height:14%;
+        left: 20%;        
+    }
+    #bottomTeam
+    {
+        width:60%;
+        left: 20%;
+        bottom:25%; 
+    }
+    #leftTeam{
+        left:1%;
+        height:80%;
+        margin-top:0%;
+    }
+    #rightTeam{
+        right:1%;
+        height:80%;
+        margin-top:0%;
+    }
+    #leftTeam, #rightTeam{
+        display: flex;
+        flex-direction: column;
+        justify-content: space-evenly;
+        align-items: center;
+        flex-wrap: wrap;
+    }
+    #topTeam, #bottomTeam{
+        display: flex;
+        flex-direction: row;
+        justify-content: space-evenly;
+        align-items: center;
+        flex-wrap: wrap;
+    }
+    .teamHolder{
+        position: absolute;
+    }
+    .questionSend, .questionView{
+        margin-top: 10%;
+        padding: 0 0;
+    }
+    #sendResults{
+        margin-top:20%;
+    }
+    
     
     
 </style>{%endblock%}
@@ -493,11 +558,25 @@
                 <li class="nav-item" role="presentation"><button class="nav-link questionTypeRefresher " id="bonus1-tab" data-bs-toggle="tab" data-bs-target="#bonus1Question" type="button" role="tab"  aria-selected="true">Bonus #1</button></li>
                 <li class="nav-item" role="presentation"><button class="nav-link questionTypeRefresher" id="bonus2-tab" data-bs-toggle="tab" data-bs-target="#bonus2Question" type="button" role="tab" aria-selected="false">Bonus#2</button></li>
             </ul>
+               
                 <div class=" questionContainer container " >
+                    <div id="topTeam" class="teamHolder">
+                        <div class="horizantalTeamLabel" id="ALabel"> Team A</div>
+                    </div>
+                    <div id="bottomTeam" class="teamHolder">
+                        <div class="horizantalTeamLabel" id="CLabel"> Team C</div>
+                    </div>
+                    <div class="verticalTeamHolder teamHolder" id="leftTeam">
+                        <div class="verticalTeamLabel" id="DLabel"> Team D</div>
+                    </div>
+                    <div class="verticalTeamHolder teamHolder" id="rightTeam">
+                        <div class="verticalTeamLabel" id="BLabel"> Team B</div>
+                    </div>
                     <div class="questionSend container ">
                         <button class="input-group-text btn btn-primary" id="questionSendButton">Send Tossup</button>
                         <textarea class="form-control" id="questionInput" rows="5"></textarea> 
                     </div>
+                    
                     <div class = "questionView hidden">
                         <div class="checkHolder">   
                             <h6 class="checkmarkLabel" >Question Already Sent</h6>

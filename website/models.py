@@ -270,7 +270,7 @@ class Room(db.Model):
     def addAttemptedPlayer(self, playerKey):
         player = Player.getPlayer(playerKey)
         if player == None: return False
-        self.playersAttempted += player.name + ", "
+        self.playersAttempted += player.privateKey + ", "
         db.session.commit()
         return True
     def clearAttemptedPlayers(self):
