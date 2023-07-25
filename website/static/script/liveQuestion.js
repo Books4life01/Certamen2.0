@@ -28,12 +28,16 @@ socket.on("roomLiveQuestionUpdate", (data) =>{
             console.log("attemptAnswer" + data.curLiveQuestionAnswer)
             //show the verifyAnswer div
             $("#verifyAnswer").removeClass("hidden");
+            $("#playerScreen").addClass("hidden");
             $("#liveAnswerReciever").text(data.curLiveQuestionAnswer);
         }
         else if (actionType == "rejectAnswer"){
             //show the verifyAnswer div
             $("#verifyAnswer").addClass("hidden");
+            $("#playerScreen").removeClass("hidden");
             $("#liveQuestionClientInfo").text("Answer Rejected! Try Again");
+            $("#liveQuestionHosttInfo").text("Answer Rejected! Question Continues");
+
             paused=false;
 
         }
@@ -49,7 +53,6 @@ socket.on("roomLiveQuestionUpdate", (data) =>{
                 if(player != data.playerInitiated['privateKey'] && player != ""){
                     $("#" + player).css("color", "red");
                 }
-                
             });
         }
     }

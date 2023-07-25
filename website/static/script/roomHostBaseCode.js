@@ -33,29 +33,8 @@ socket.on('roomDataUpdate', data=>{
                 e.classList.remove("active");
             }
         });
-        //reset send Question div
-        if(results.length > curQuestion){//IMPORTANT temporary patch figure this out later
-            questionType = ['tossup', 'bonus1', 'bonus2'][roomData.curQuestionType]
-            resultData = results[curQuestion-1];
-            if(resultData[questionType+"Answer"] != ""){
-                $(".questionSend").addClass("hidden");
-                $(".questionInput").addClass("hidden");
-                $(".questionView").removeClass("hidden");
-                
-                $(".preAnsweredQuestionHolder").prop("disabled", true);
-                $(".preAnsweredAnswerHolder").prop("disabled", true);
-                $(".preAnsweredAnswerHolder").val(resultData[questionType+"Answer"]);
-                $(".preAnsweredQuestionHolder").val(resultData[questionType+"Question"]);
-            }
-            else{
-                $(".questionSend").removeClass("hidden");
-                $(".questionInput").removeClass("hidden");
-                $(".questionView").addClass("hidden");
-                $(".questionInput").val("");
-            }
-        }
-        
-
+        //reset results
+        resetResults();
     }
 });
 socket.on("tournTeamsUpdate", (data) => {
