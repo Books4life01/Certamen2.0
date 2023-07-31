@@ -37,6 +37,9 @@
        
         
     }
+    function resetResults(){
+
+    }
 </script>
 {%endblock%}
 
@@ -50,14 +53,7 @@
         height:60%;
         margin: 0 0;
     }
-    #pastQuestions{
-        border: 1px dotted orange;
-        border-radius: 25px;
-        width:35%;
-        height:80%;
-        margin-left: 1%;
-        
-    }
+    
     #liveQuestionReciever{
         border: 1px dotted blue;
         height: 50%;
@@ -92,7 +88,6 @@
         display: flex;
         flex-direction: row;
         flex-wrap: nowrap;
-        
     } 
     
     
@@ -101,7 +96,6 @@
 {%block content%}
 <div class="container">
     <div id="pastQuestions">
-
     </div>
     
     <div id="topTeam" class="teamHolder">

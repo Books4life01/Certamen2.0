@@ -86,6 +86,15 @@
        <!--styles and scripts in children templates overide all previous styles-->
        {% block styles %}{%endblock%}
        {% block script %}{%endblock%}
+       <script>
+        try{
+            socket.on("ERROR", (data)=>{
+              document.location.href = `/error?msg=${data}`;
+            });
+        }
+        catch(err){
+        }
+       </script>
     </head>
     <body>
         <nav class="navbar navbar-expand-lg" id="primary-nav-bar">

@@ -20,7 +20,7 @@ def on_disconnect():
             #loop through all clients in the room
             for client in room["clients"]:
                 #emit a disconnect message to all clients in the room
-                emit('disconnect', room=key, namespace="/")
+                emit('ERROR', "Host Disconnected", broadcast=True)
             #remove the room from the liveRoomClients dictionary
             liveRoomClients.pop(key)
             Room.getRoomByPublic(key).isLive = False

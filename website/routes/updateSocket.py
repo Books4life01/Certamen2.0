@@ -50,14 +50,7 @@ def on_roomResultUpdate( message):
         db.session.commit()
     #braodcast result update to all clients connected to the room
     emitRoomResults(roomPrivateKey, True)
-def on_roomCurQuestionAnswerStateUpdate(message):
-    room = Room.getRoomByPrivate(message["roomKey"])
-    if room is None:
-        emit("ERROR", "No room found with that private key")
-    else:
-        room.results[message["curQuestion"]-1].answered = message["answered"]
-    #broadcast result update to all clients connected to the room
-    emitRoomData(message["roomKey"], True)
+
     
 def on_roomCurQuestionTypeUpdate(message):
     room = Room.getRoomByPrivate(message["roomKey"])
@@ -68,6 +61,7 @@ def on_roomCurQuestionTypeUpdate(message):
         db.session.commit()
     #broadcast result update to all clients connected to the room
     emitRoomData(message["roomKey"], True)
+    
 def on_roomCurQuestionUpdate( message):
     #retrieve request data
     roomPrivateKey = message["roomKey"]
@@ -114,11 +108,21 @@ def on_liveQuestionUpdate(data):
     elif actionType == "nextChar":
         #add the next character to the live question
         room.curLiveQuestion += data['nextChar']
+    #for all these timer actions, the time left on the timer and the player who initiated the timer is sent to the client
+    elif actionType == "startTimer" or actionType == "updateTimer" or actionType == "endTimer":
+        room.timer = data['timeLeft'] if not actionType == "endTimer" else 0
+    elif actionType == "infoUpdate":
+        room.clientInfo = data['clientInfo']
+        room.hostInfo = data['hostInfo']
     elif actionType == "pause":
-        room.liveQuestionPaused = True
         room.addAttemptedPlayer(data['player']['privateKey'])
     elif actionType == "attemptAnswer":
-        room.curLiveQuestionAnswer = data['attemptedAnswer']
+        try:
+            room.curLiveQuestionAnswer = data['attemptedAnswer']
+            print("attempted answer sucess")
+        except:
+            print("ERROR: no attempted answer")
+            print(data)
     elif actionType == "rejectAnswer":
         room.curLiveQuestionAnswer = ""
         room.curLiveQuestionPaused = False
@@ -128,12 +132,9 @@ def on_liveQuestionUpdate(data):
         if questionType == 0:result.tossupAnswer = room.curLiveQuestionAnswer
         elif questionType == 1:result.bonus1Answer = room.curLiveQuestionAnswer
         elif questionType == 2:result.bonus2Answer = room.curLiveQuestionAnswer
-        
-        
-        room.liveQuestionPaused=False
     db.session.commit()
     #broadcast live question update to all clients connected to the room including
-    if(actionType=="pause" or actionType=="attemptAnswer" ):
+    if(actionType=="pause" or actionType=="attemptAnswer" or actionType =="startTimer" or actionType =="updateTimer" or actionType =="endTimer" ):
         emitRoomLiveQuestionUpdate(roomPrivateKey, data['actionType'], True, player =data['player'])
     else: emitRoomLiveQuestionUpdate(roomPrivateKey, data['actionType'], True)
     #if the actionType is acceptAnswer or endBroadcast then broadcast the room data

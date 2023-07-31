@@ -1,5 +1,6 @@
 from flask import Blueprint, render_template, request, redirect, flash, url_for
 from ..models import Player, Tournament, Room
+from . updateSocket import emitTournData
 from .. import db
 
 manage = Blueprint('manage', __name__)#passing the name of the blueprint and the name of the file

@@ -8,6 +8,7 @@
 <script>
     //Template Specific Variables
     let roomKey = {{ roomKey|tojson }};
+    let player = undefined;
 
     //template Specific Socket Handlers -> socket variables defined in roomHostBaseCode.js
     socket.on('connect', function(){

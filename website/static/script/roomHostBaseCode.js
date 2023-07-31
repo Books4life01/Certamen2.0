@@ -2,7 +2,11 @@
 let curQuestion = 1;
 let results = [];
 let roomData = {};
-const socket = io.connect('http://172.24.200.242:8080');
+const socket = io.connect('http://192.168.4.127:8080');
+
+//golbal timer for the wuestion timeout: used in liveQuestion.js
+var timer;
+
 
 //Document Ready
 $(document).ready(() => {

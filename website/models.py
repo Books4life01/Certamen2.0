@@ -199,10 +199,16 @@ class Room(db.Model):
     curLiveQuestionAnswer = db.Column(db.String(2000),  nullable=True, default="")
     #teamsAttempted: teams that have attempted to answer the question and failed
     playersAttempted = db.Column(db.String(2000), unique=False, default=0)
-    #whether or not the question is paused for answer inspection
-    liveQuestionPaused = db.Column(db.Boolean, unique=False, default=False)
+    #the time left on the timer: 0 if the timer is not running. The timer is running when the question is paused so we dont need a isLiveQuestionPaused variable
+    timer = db.Column(db.Integer, unique=False, default=0)
     #isLive determines if the room is live or not: it is live if a client is currently managing the room
     isLive = db.Column(db.Boolean, unique=False)
+
+    #info about liveQuestion that will be displayed on the clients screen
+    clientInfo = db.Column(db.String(2000), unique=False, default="")
+    #info about liveQuestion that will be displayed on the host screen
+    hostInfo = db.Column(db.String(2000), unique=False, default="")
+
 
 
 
@@ -308,7 +314,9 @@ class Room(db.Model):
             'currentQuestion': self.currentQuestion,
             'curLiveQuestion': self.curLiveQuestion,
             'curLiveQuestionAnswer': self.curLiveQuestionAnswer,
-            'liveQuestionPaused': self.liveQuestionPaused,
+            'clientInfo':self.clientInfo,
+            'hostInfo': self.hostInfo,
+            'timer': self.timer,
             'playersAttempted': self.getAttemptedPlayers()
         }
     #STATIC FUNCTIONS
