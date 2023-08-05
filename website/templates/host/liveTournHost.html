@@ -14,12 +14,10 @@
         });
     });
     socket.on("tournDataUpdate", (data) => {
-        console.log("Tourn Data Update")
-        console.log(data);
         if(data.privateKey == tournKey || data.publicKey == tournKey){
             tourn = data;
+            $("#tournLabel").text("LIVE TOURN Private: " + tourn.privateKey + "Public:" + tourn.publicKey);
         }
-        $("#tournLabel").text("LIVE TOURN Private: " + tourn.privateKey + "Public:" + tourn.publicKey);
     });
     //Receive Tournament Data from the server
     socket.on("tournRoomsUpdate", (data) => {
@@ -71,7 +69,8 @@
         //Ensure that the tournament we are looking at is the same as the one we are recieving data for
         if (data.tournKey == {{ tournKey|tojson }}){
         
-            let teamsContainer = $("#teamsContainer");
+            $("#teamsContainer").empty()
+            $("#teamsContainer").append($("<div class='team'><h6>Team Name</h6><h6>Manage Team</h6><h6>Private Key</h6><h6>Public Key</h6></div>"));
             data.teams.forEach((team) => {
                 console.log(team);
                 let teamDiv = $("<div class='team'></div>");
@@ -84,7 +83,7 @@
                 teamDiv.append(manageTeamBtn);
                 teamDiv.append(teamPrivateKey);
                 teamDiv.append(teamPublicKey);
-                teamsContainer.append(teamDiv);
+                $("#teamsContainer").append(teamDiv);
 
             });
             console.log(data);

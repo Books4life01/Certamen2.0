@@ -48,12 +48,12 @@ def createSocketServer(app):
     socketio = SocketIO(app, cors_allowed_origins="*")
 
     #import models
-    from .routes.updateSocket import on_roomResultUpdate, on_teamAssignmentUpdate, on_roomCurQuestionUpdate, on_liveQuestionUpdate, on_roomCurQuestionUpdate, on_roomCurQuestionTypeUpdate
+    from .routes.updateSocket import on_roomResultUpdate, on_teamAssignmentUpdate, on_liveQuestionUpdate, on_roomCurQuestionNumberOrTypeUpdate
     from .routes.refreshSocket import on_roomDataRefreshRequest, on_tournDataRefreshRequest
-    from .routes.baseSocket import on_connect, on_disconnect, on_roomClientConnect, on_roomHostConnect
+    from .routes.baseSocket import on_disconnect, on_roomClientConnect, on_roomHostConnect
     
     #BASES
-    socketio.on_event("connect", on_connect)
+    # socketio.on_event("connect", on_connect)
     socketio.on_event("disconnect", on_disconnect)
     socketio.on_event("roomClientConnect", on_roomClientConnect)
     socketio.on_event("roomHostConnect", on_roomHostConnect)
@@ -65,9 +65,9 @@ def createSocketServer(app):
     socketio.on_event("roomResultUpdate", on_roomResultUpdate)
 
 
-    socketio.on_event("roomCurQuestionUpdate", on_roomCurQuestionUpdate)
+    socketio.on_event("roomCurQuestionUpdate", on_roomCurQuestionNumberOrTypeUpdate)
     socketio.on_event("liveQuestionUpdate", on_liveQuestionUpdate)
-    socketio.on_event("roomCurQuestionTypeUpdate", on_roomCurQuestionTypeUpdate)
+    socketio.on_event("roomCurQuestionTypeUpdate", on_roomCurQuestionNumberOrTypeUpdate)
 
 
 

@@ -1,12 +1,14 @@
 from flask_socketio import emit
 from flask import request
+
+from website.routes.updateSocket import on_liveQuestionUpdate
 from .. import db
 from ..models import Player, Tournament, Room, Team, Result
 from .. import liveRoomClients
 from .refreshSocket import emitRoomData, on_roomDataRefreshRequest, on_tournDataRefreshRequest
 #Manage Connection
-def on_connect():
-    print("Connected with sid of " + str(request.sid))
+# def on_connect():
+    # print("Connected with sid of " + str(request.sid))
 #Manage Disconnection
 def on_disconnect():
     #retrive client object being disconnected
@@ -17,10 +19,13 @@ def on_disconnect():
         room = liveRoomClients[key]
         if room["host"] == socketClient:
             #if the client is the host of the room
+            roomObj = Room.getRoom(key)
+            #send out a rejectAnswer message and clearTimer liveQuestion broadcast update
+            on_liveQuestionUpdate(data = {"roomKey": roomObj.privateKey, "questionNum": roomObj.curQuestionNumber,"questionType": roomObj.curQuestionType, "actionType":"rejectAnswer","questionNum":roomObj.curQuestionNumber})
             #loop through all clients in the room
             for client in room["clients"]:
                 #emit a disconnect message to all clients in the room
-                emit('ERROR', "Host Disconnected", broadcast=True)
+                emit('ERROR', "Host Disconnected", room=client['id'])
             #remove the room from the liveRoomClients dictionary
             liveRoomClients.pop(key)
             Room.getRoomByPublic(key).isLive = False
@@ -34,9 +39,9 @@ def on_disconnect():
             room["clients"].remove(client)
             #remove live player from room
             Room.getRoomByPublic(key).removeLivePlayer(client["playerKey"])
-    print(str(socketClient) + " Disconnected")
-    print("CUrrent Live ROoms")
-    print(liveRoomClients)
+    # print(str(socketClient) + " Disconnected")
+    # print("CUrrent Live ROoms")
+    # print(liveRoomClients)
 #Manage LiveRoom Connection
 def on_roomHostConnect( message):
     #retrieve sid from request which is the socket id
@@ -57,9 +62,9 @@ def on_roomHostConnect( message):
         "host": sid,
         "clients": []
     }
-    print("Host Joined: " + str(sid) + " to room: " + str(privateKey))
-    print("Current Live ROoms")
-    print(liveRoomClients)
+    # print("Host Joined: " + str(sid) + " to room: " + str(privateKey))
+    # print("Current Live ROoms")
+    # print(liveRoomClients)
     #broadcast room live update 
     on_tournDataRefreshRequest({"tournKey": room.superTournament}, brdcst=True)
 def on_roomClientConnect( message):

@@ -1,11 +1,10 @@
 //Global variables
-let curQuestion = 1;
 let results = [];
 let roomData = {};
 const socket = io.connect('http://192.168.4.127:8080');
 
 //golbal timer for the wuestion timeout: used in liveQuestion.js
-var timer;
+var intervalTimer;
 
 
 //Document Ready
@@ -21,24 +20,11 @@ $(document).ready(() => {
 //Socket Handlers
 socket.on('roomDataUpdate', data=>{
     if(data.privateKey == roomKey || data.publicKey == roomKey){
-        console.log("Room Data Recieved from the Server")
-        console.log(data);
-        curQuestion = data.currentQuestion;
-        curQuestionType = data.curQuestionType;
+        //update the global room data
         roomData = data;
-        $(".questionNum").text("Question #" + curQuestion);
-        let questionType = ['Tossup', 'Bonus#1', 'Bonus#2'][roomData.curQuestionType]
-        $("#questionSendButton").text("Send " + questionType);
-        $(".questionTypeRefresher").each((i, e) => {
-            if (i == curQuestionType){
-                e.classList.add("active");
-                
-            }else{
-                e.classList.remove("active");
-            }
-        });
-        //reset results
-        resetResults();
+        //call template specific room data update function
+        onRoomDataUpdate();
+        if(results.length>0)resetResults();
     }
 });
 socket.on("tournTeamsUpdate", (data) => {
