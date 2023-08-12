@@ -76,7 +76,7 @@ function onRoomDataUpdate(){
         $("#pastQuestions").append($("<h1 ></h1>").text("Past Questions").css("text-align","center"));
 
         results.forEach(result => {
-            if(result['questionNumber']>roomData['currentQuestion'])return;
+            if(result['questionNumber']>=roomData['curQuestionNumber'])return;
             let question = $("<div class='pastQuestion'></div>").text("Tossup"+result['questionNumber'] ).attr("id", result['id']);
             question.on("mouseenter", (event)=>{
                 $("#" + event.currentTarget.id).append($("<div class='hoverbox' id='hoverbox" + event.currentTarget.id + "'></div>").append($(`

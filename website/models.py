@@ -286,11 +286,8 @@ class Room(db.Model):
     def answered(self):
         if(self.curQuestionNumber > len(self.results)): return False
         else:
-            if self.curQuestionType == 0 and self.results[self.curQuestionNumber-1].tossupAnswer != "": return True
-            elif self.curQuestionType == 1 and self.results[self.curQuestionNumber-1].bonus1Answer != "": return True
-            elif self.curQuestionType == 2 and self.results[self.curQuestionNumber-1].bonus2Answer != "": return True
-            else : return False    
-    
+            return  self.results[self.curQuestionNumber-1].tossupAnswer != ""
+           
     
         
     #@property is used to make a function act like a variable
