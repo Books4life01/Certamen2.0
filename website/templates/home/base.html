@@ -3,7 +3,12 @@
     <head>
         <meta charset="utf-8">
         <meta name = "viewport" content="width=device-width, initial-scale=1.0">
+        <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+        <meta http-equiv="Pragma" content="no-cache">
+        <meta http-equiv="Expires" content="0">
         <title>{% block title %}Home{% endblock %}</title>
+        <!--Hack Timer: prevent browser from throttling inactive tab execution-->
+        <script src= "{{url_for('static', filename='script/hackTimer.js')}}"></script>
         <!--Bootstrap 5.0.2 CSS and JS-->
         <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-9ndCyUaIbzAi2FUVXJi0CjmCapSmO7SnpJef0486qhLnuZ2cdeRhO02iuK6FUUVM" crossorigin="anonymous">
         <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js" integrity="sha384-geWF76RCwLtnZ8qwWowPQNguL3RmwHVBC9FhGdlKrxdiJJigb/j/68SIy3Te4Bkz" crossorigin="anonymous"></script>
@@ -74,13 +79,22 @@
           border: 1px solid var(--primary-color);
       }
       .hidden{
-          display: none;
+          display: none !important;
       }
        </style>
        
        <!--styles and scripts in children templates overide all previous styles-->
        {% block styles %}{%endblock%}
        {% block script %}{%endblock%}
+       <script>
+        try{
+            socket.on("ERROR", (data)=>{
+              document.location.href = `/error?msg=${data}`;
+            });
+        }
+        catch(err){
+        }
+       </script>
     </head>
     <body>
         <nav class="navbar navbar-expand-lg" id="primary-nav-bar">

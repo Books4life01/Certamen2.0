@@ -9,8 +9,21 @@ class Player(db.Model):
     privateKey = db.Column(db.String(8), unique=True)
     name = db.Column(db.String(100), unique=False)
     superTournament = db.Column(db.Integer, db.ForeignKey('tournament.privateKey'))
+    superTeam = db.Column(db.Integer, db.ForeignKey('team.privateKey'))
+
+
 
     #FUNCTIONS
+    @property
+    def serialize(self):
+        return {
+            'publicKey': self.publicKey,
+            'privateKey': self.privateKey,
+            'name': self.name,
+            'superTournament': self.superTournament,
+            'superTeam': self.superTeam
+        }
+
     #see if a player exsists by its key either public or private
     @staticmethod
     def exists(publicKey):
@@ -19,10 +32,10 @@ class Player(db.Model):
         return private != None or public != None
     #create a new player
     @staticmethod
-    def createPlayer(playerName, tournamentKey):
+    def createPlayer(playerName, tournamentKey, teamKey):
         privateKey = Player.generateKey()
         publicKey = Player.generateKey(privateKey)
-        player = Player(name=playerName, superTournament=tournamentKey, publicKey=publicKey, privateKey=privateKey)
+        player = Player(name=playerName, superTournament=tournamentKey, superTeam = teamKey, publicKey=publicKey, privateKey=privateKey)
         return player
     #generate a key for the player ensuring it is unique and not the same as the provided invalid key argumeny
     @staticmethod
@@ -43,6 +56,9 @@ class Player(db.Model):
     @staticmethod
     def getPlayerByPrivate(privateKey):
         return db.session.query(Player).filter_by(privateKey=privateKey).first()
+    @staticmethod
+    def getPlayer(key):
+        return Player.getPlayerByPublic(key) or Player.getPlayerByPrivate(key)
 
     
 
@@ -78,14 +94,15 @@ class Tournament(db.Model):
         db.session.commit()
         return team.privateKey
     #add a player to the tournament reutrn the player's private key
-    def createPlayer(self, playerName):
-        player = Player.createPlayer(playerName, self.privateKey)
+    def createPlayer(self, playerName, teamKey):
+        player = Player.createPlayer(playerName, self.privateKey, teamKey)
         self.players.append(player)
         db.session.commit()
         return player.privateKey
     #get a tournaments list of teams
     def getTeams(self):
         return [team.serialize for team in self.teams]
+    
     #get a tournaments list of rooms
     def getRooms(self):
         return [room.serialize for room in self.rooms]
@@ -97,6 +114,17 @@ class Tournament(db.Model):
     def delete(self):
         db.session.delete(self)
         db.session.commit()
+    @property
+    def serialize(self):
+        return {
+            'privateKey': self.privateKey,
+            'publicKey': self.publicKey,
+            'name': self.name,
+            'players': self.getPlayers(),
+            'rooms': self.getRooms(),
+            'teams': self.getTeams(),
+            'liveTourn': self.liveTourn
+        }
 
     
     
@@ -162,36 +190,111 @@ class Room(db.Model):
     results = db.relationship('Result', lazy=True, backref='room')
 
     #active Question Number
-    currentQuestion = db.Column(db.Integer, unique=False, default=1)    
+    curQuestionNumber = db.Column(db.Integer, unique=False, default=1)  
+    #active Question Type: so if tossup is being asked, or bonus1, or bonus2
+    curQuestionType = db.Column(db.Integer, unique=False, default=0)#0=Tossup, 1=Bonus1, 2=Bonus2
+    
+    #current Live Question: the question that is currently being asked
+    curLiveQuestion = db.Column(db.String(2000),  nullable=True, default="")
+    #current Live Question Answer: the attempted answer to the question that is currently being asked
+    curLiveQuestionAnswer = db.Column(db.String(2000),  nullable=True, default="")
 
+
+    
+    #the time left on the timer: 0 if the timer is not running. The timer is running when the question is paused so we dont need a isLiveQuestionPaused variable
+    timer = db.Column(db.Integer, unique=False, default=0)
     #isLive determines if the room is live or not: it is live if a client is currently managing the room
     isLive = db.Column(db.Boolean, unique=False)
 
-
-
+    #info about liveQuestion that will be displayed on the clients screen
+    clientInfo = db.Column(db.String(2000), unique=False, default="Press Space to Buzz In")
+    #info about liveQuestion that will be displayed on the host screen
+    hostInfo = db.Column(db.String(2000), unique=False, default="Live Results")
    
     #Teams in the Room: Max of 4
     teamA = db.Column(db.Integer, db.ForeignKey('team.privateKey'), nullable=True)
     teamB = db.Column(db.Integer, db.ForeignKey('team.privateKey'), nullable=True)
     teamC = db.Column(db.Integer, db.ForeignKey('team.privateKey'), nullable=True)
     teamD = db.Column(db.Integer, db.ForeignKey('team.privateKey'), nullable=True)
+    #players currently live from each team
+    teamAPlayers = db.Column(db.Integer, unique=False, default=0)
+    teamBPlayers = db.Column(db.Integer, unique=False, default=0)
+    teamCPlayers = db.Column(db.Integer, unique=False, default=0)
+    teamDPlayers = db.Column(db.Integer, unique=False, default=0)
 
     #return the selectedTeams in the room
     def getTeams(self):
-        return {"teams":(self.teamA, self.teamB, self.teamC, self.teamD)}
+        return [self.teamA, self.teamB, self.teamC, self.teamD]
     #get Results in the room
     def getResults(self):
         return [result.serialize for result in self.results]
-    def addResult(self, teamLetter, playerNumber, questionNumber, tossupAchieved, bonus1Achieved, bonus2Achieved):
-        result = Result(teamLetter=teamLetter, playerNumber=playerNumber, questionNumber=questionNumber, tossup=tossupAchieved, bonus1=bonus1Achieved, bonus2=bonus2Achieved)
+    def addResult(self, teamAnsweredKey, playerAnsweredKey, questionNumber, tossupAchieved, bonus1Achieved, bonus2Achieved, tossupQuestion="None", bonus1Question="None", bonus2Question="None"):
+        result = Result(teamAnsweredKey=teamAnsweredKey, playerAnsweredKey=playerAnsweredKey, questionNumber=questionNumber, tossup=tossupAchieved, bonus1=bonus1Achieved, bonus2=bonus2Achieved, tossupQuestion=tossupQuestion, bonus1Question=bonus1Question, bonus2Question=bonus2Question, superRoom = self.publicKey)
         db.session.add(result)
         self.results.append(result)
         db.session.commit()
-
+    def canCompete(self, playerKey):
+        #retrieve player superTeam
+        player = Player.getPlayer(playerKey)
+        if player == None: return False
+        superTeam = player.superTeam
+        #ensure room isLive
+        if not self.isLive: return False
+        #check if the player's superTeam is in the room
+        return superTeam == self.teamA and self.teamAPlayers < 4 or superTeam == self.teamB and self.teamBPlayers < 4 or superTeam == self.teamC and self.teamCPlayers < 4 or superTeam == self.teamD and self.teamDPlayers < 4
+   #adds a player to the room given a teamKey and increments the number of players in the team
+    def addLivePlayer(self, playerKey):
+        if self.canCompete(playerKey):
+            player = Player.getPlayer(playerKey)
+            superTeam = player.superTeam
+            if superTeam == self.teamA:
+                self.teamAPlayers += 1
+            elif superTeam == self.teamB:
+                self.teamBPlayers += 1
+            elif superTeam == self.teamC:
+                self.teamCPlayers += 1
+            elif superTeam == self.teamD:
+                self.teamDPlayers += 1
+            db.session.commit()
+            return True
+        return False
+    #removes a player from the room given a teamKey and decrements the number of players in the team
+    #eamKey is the private key of the team
+    def removeLivePlayer(self, playerKey):
+        teamKey = Player.getPlayer(playerKey).superTeam
+        if teamKey == self.teamA and self.teamAPlayers > 0:
+            self.teamAPlayers -= 1
+        elif teamKey == self.teamB and self.teamBPlayers > 0:
+            self.teamBPlayers -= 1
+        elif teamKey == self.teamC and self.teamCPlayers > 0:
+            self.teamCPlayers -= 1
+        elif teamKey == self.teamD and self.teamDPlayers > 0:
+            self.teamDPlayers -= 1
+        db.session.commit()
+    def addAttemptedPlayer(self, playerKey):
+        if (self.curQuestionNumber <= len(self.results)): self.results[self.curQuestionNumber-1].addAttemptedPlayer(playerKey)
+        db.session.commit()
+    #get the player who answered the current Question, so the last player to attempt the question or if the answer hasnt been gotten right then none
+    def getPlayerAnswered(self):
+        return None if (not self.answered) or self.curQuestionNumber > len(self.results) else list(filter(lambda x: x != "",self.results[self.curQuestionNumber-1].getAttemptedPlayers()))[-1]
+    def getAttemptedPlayers(self):
+        return self.results[self.curQuestionNumber-1].getAttemptedPlayers()
+    def delete(self):
+        db.session.delete(self)
+        db.session.commit()
+    @property
+    def answered(self):
+        if(self.curQuestionNumber > len(self.results)): return False
+        else:
+            return  self.results[self.curQuestionNumber-1].tossupAnswer != ""
+           
+    
+        
     #@property is used to make a function act like a variable
     @property
     def isLiveRoom(self):
         return Tournament.getTournByPrivate(self.superTournament).liveTourn
+    
     #serialize the room object by converting it to a dictionary; we do this so we can send it as a json object
     @property
     def serialize(self):
@@ -205,7 +308,21 @@ class Room(db.Model):
             'teamA': self.teamA,
             'teamB': self.teamB,
             'teamC': self.teamC,
-            'teamD': self.teamD
+            'teamD': self.teamD,
+            'teamAPlayers': self.teamAPlayers,
+            'teamBPlayers': self.teamBPlayers,
+            'teamCPlayers': self.teamCPlayers,
+            'teamDPlayers': self.teamDPlayers,
+            'curQuestionType': self.curQuestionType,
+            'curQuestionNumber': self.curQuestionNumber,
+            'curLiveQuestion': self.curLiveQuestion if self.curLiveQuestion !="None" else "",
+            'curLiveQuestionAnswer': self.curLiveQuestionAnswer,
+            'clientInfo':self.clientInfo,
+            'hostInfo': self.hostInfo,
+            'timer': self.timer,
+            'playersAttempted': self.results[self.curQuestionNumber-1].getAttemptedPlayers() if self.curQuestionNumber <= len(self.results) else [],
+            'correctPlayer': self.getPlayerAnswered(),
+            'answered': self.answered
         }
     #STATIC FUNCTIONS
     #see if a room exsists with either a piblic or private key
@@ -261,12 +378,14 @@ class Team(db.Model):
     #key of the super tournament
     superTournament = db.Column(db.String(8), db.ForeignKey('tournament.privateKey'))
 
-    #Players in the team: Max of 4
+    #official Players in the team: Max of 4
     player1 = db.Column(db.Integer, db.ForeignKey('player.privateKey'))
     player2 = db.Column(db.Integer, db.ForeignKey('player.privateKey'))
     player3 = db.Column(db.Integer, db.ForeignKey('player.privateKey'))
     player4 = db.Column(db.Integer, db.ForeignKey('player.privateKey'))
 
+  
+    players = db.relationship('Player', backref='team', lazy='dynamic', primaryjoin="or_(Team.privateKey==Player.superTeam)")
     #FUNCTIONS
     #serialize the team object by converting it to a dictionary; we do this so we can send it as a json object
     @property
@@ -314,25 +433,42 @@ class Team(db.Model):
             while len(key) < 8:
                 key += values[random.randint(0, len(values) - 1)]
         return key
+    @staticmethod
+    def getTeamByPrivate(privateKey):
+        return db.session.query(Team).filter_by(privateKey=privateKey).first()
+    @staticmethod
+    def getTeamByPublic(publicKey):
+        return db.session.query(Team).filter_by(publicKey=publicKey).first()
     
 class Result(db.Model):
     #id of the result
     id = db.Column(db.Integer, primary_key=True, unique=True)
-    #team that got the question right: Team ABCorD
-    teamLetter = db.Column(db.String(1), unique=False)
+    #key of team that got the question right
+    teamAnsweredKey = db.Column(db.String(8), unique=False)
     #player that got the question right: Player 1, 2, 3, or 4
-    playerNumber = db.Column(db.String(1), unique=False)
+    playerAnsweredKey = db.Column(db.String(8), unique=False)
     #room that the question was in
     superRoom = db.Column(db.Integer, db.ForeignKey('room.privateKey'))
-
+#plyersAttempted: teams that have attempted to answer the question and failed
+    playersAttempted = db.Column(db.String(2000), unique=False, default="")
     #QuestionNumber
     questionNumber = db.Column(db.Integer, unique=False)
-    
+   
     #tossup achieved?
     tossup = db.Column(db.Boolean, unique=False)
+    tossupQuestion = db.Column(db.String(2000), unique=False, default="", nullable=False)
+    #accepted answer
+    tossupAnswer = db.Column(db.String(2000), unique=False, default="", nullable=False)
     #bonuses achieved?
     bonus1 = db.Column(db.Boolean, unique=False)
+    bonus1Question = db.Column(db.String(2000), unique=False, default="", nullable=False)
+        #accepted answer
+    bonus1Answer = db.Column(db.String(2000), unique=False,default="", nullable=False)
     bonus2 = db.Column(db.Boolean, unique=False)
+    bonus2Question = db.Column(db.String(2000), unique=False, default="", nullable=False)
+        #accepted answer
+
+    bonus2Answer = db.Column(db.String(2000), unique=False, default="", nullable=False)
 
     #calculate the total points
     @property
@@ -344,14 +480,29 @@ class Result(db.Model):
         return {
             'id': self.id,
             'questionNumber': self.questionNumber,
-            'teamLetter': self.teamLetter,
-            'playerNum': self.playerNumber,
+            'teamAnsweredKey': self.teamAnsweredKey,
+            'playerAnsweredKey': self.playerAnsweredKey,
             'superRoom': self.superRoom,
             'tossup': self.tossup,
             'bonus1': self.bonus1,
             'bonus2': self.bonus2,
-            'totalPoints': self.totalPoints
+            'totalPoints': self.totalPoints, 
+            'tossupQuestion': self.tossupQuestion if self.tossupQuestion != "None" else "",
+            'bonus1Question': self.bonus1Question if self.bonus1Question != "None" else "",
+            'bonus2Question': self.bonus2Question if self.bonus2Question != "None" else "", 
+            'tossupAnswer': self.tossupAnswer if self.tossupQuestion != "None" else "",
+            'bonus1Answer': self.bonus1Answer if self.bonus1Question != "None" else "",
+            'bonus2Answer': self.bonus2Answer if self.bonus2Question != "None" else "",
+            'playersAttempted': self.getAttemptedPlayers()
         }
+    def addAttemptedPlayer(self, playerKey):
+        player = Player.getPlayer(playerKey)
+        if player == None: return False
+        if  player.privateKey not in self.playersAttempted: self.playersAttempted += player.privateKey + ", "
+        db.session.commit()
+        return True
+    def getAttemptedPlayers(self):
+        return self.playersAttempted.split(", ")
 
 
     

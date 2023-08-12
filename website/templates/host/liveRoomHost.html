@@ -1,18 +1,244 @@
 {%extends "home/base.html"%}
-{%block script%}<script>
-    const socket = io.connect('http://159.203.180.66:8080');
+{%block title%}LiveRoomHost{%endblock%}
 
+{%block script%}
+<script src="{{ url_for('static', filename='script/dragdrop.js') }}"></script>
+<script src="{{ url_for('static', filename='script/roomHostBaseCode.js') }}"></script>
+<script src="{{ url_for('static', filename='script/liveQuestion.js') }}"></script>
+<script>
+    //Template Specific Variables
+    let roomKey = {{ roomKey|tojson }};
+    let player = undefined;
+
+    //template Specific Socket Handlers -> socket variables defined in roomHostBaseCode.js
     socket.on('connect', function(){
-        emit('roomHostConnect', data = {"tournKey": {{ tournKey|tojson }}});
+        console.log("Connected to server");
     });
 
+    function onRoomDataUpdate(){
+        //update the question number and type
+        $(".questionNum").text("Question #" + roomData.curQuestionNumber);
+        let questionType = ['Tossup', 'Bonus#1', 'Bonus#2'][roomData.curQuestionType]
+        $("#questionSendButton").text("Send " + questionType);
 
+        //update which question is selected
+        $(".questionTypeRefresher").each((i, e) => {
+            if (i == roomData.curQuestionType)e.classList.add("active"); 
+            else e.classList.remove("active");
+        }); 
+        liveQuestionUpdate();
+    }
+   
 
-    $("document").ready(function(){
-        $(".btn-primary").click(function(){
-            socket.emit('sendQuestion', $("#questionInput").val());
+    
+    
+    
+    
+
+    //set up event listeners
+   function documentReady() {
+        console.log("Document Ready");
+            $("#questionSendButton").click( () => {
+               sendQuestion($("#questionInput").val(), roomData.curQuestionType);
+            });
+        $("#teamAnswered").on("change", () => {
+           sendResultData();
         });
-    });
+        $("#playerAnswered").on("change", () => {
+            sendResultData();
+        });
+        $("#tossup").on("change", () => {
+            sendResultData();
+        });
+        $("#bonus1").on("change", () => {
+            sendResultData();
+        });
+        $("#bonus2").on("change", () => {
+            sendResultData();
+        });
+        $(".advance").on("click", () => {
+            //update the result data from current question 
+            sendResultData();
+            //advance a question
+            updateCurQuestion(roomData.curQuestionNumber+1);
+            //load preset results for this new question if they exist
+            resetResults();
+        });
+        $(".back").on("click", () => {
+            if(roomData.curQuestionNumber > 1){
+                //update the result data from current question
+                sendResultData();
+                //back up a question
+                updateCurQuestion(roomData.curQuestionNumber-1);
+                //load preset results for this new question if they exist
+                resetResults();
+            }
+        });
+        $("#acceptAnswer").click(()=>{
+            socket.emit("liveQuestionUpdate", data = {"roomKey": roomKey, "questionNum": roomData.curQuestionNumber,"questionType": roomData.curQuestionType, "actionType":"acceptAnswer","questionNum":roomData.curQuestionNumber})
+        })
+        $("#rejectAnswer").click(()=>{
+            socket.emit("liveQuestionUpdate", data = {"roomKey": roomKey, "questionNum": roomData.curQuestionNumber,"questionType": roomData.curQuestionType, "actionType":"rejectAnswer","questionNum":roomData.curQuestionNumber})
+        })
+        $(".questionTypeRefresher").click((e) => {
+            if (e.target.id=="tossup-tab"){
+                updateCurQuestionType(0);
+            }
+            else if(e.target.id=="bonus1-tab"){
+                updateCurQuestionType(1);
+            }
+            else updateCurQuestionType(2);
+            
+        });
+    }
+
+    /**
+        * Updates the results array with the current results and sends the data to the server
+        * @param {int} roomCurQuestion the current question of the room
+    **/
+    function sendResultData(){
+        //create data object to send to server
+        out = {}
+        console.log("Updating Results and Sending to Server")
+        //Retrieve the current results from the form and store them in the results array, and in the data object
+        out['teamAnsweredKey']= results[roomData.curQuestionNumber-1].teamAnsweredKey;
+        out['playerAnsweredKey'] = results[roomData.curQuestionNumber-1].playerAnsweredKey;
+        out['tossup']= results[roomData.curQuestionNumber-1].tossup;
+        out['bonus1']= results[roomData.curQuestionNumber-1].bonus1;
+        out['bonus2']= results[roomData.curQuestionNumber-1].bonus2;
+        out['roomKey'] =results[roomData.curQuestionNumber-1].roomKey= {{ roomKey|tojson }};
+        out['questionNum'] = roomData.curQuestionNumber;
+        console.log("Saving and Sending");
+        console.log(out);
+        socket.emit("roomResultUpdate", data = out);
+        resetResults();
+    }
+    /**
+    * Updates the status of the answer for the current question
+    **/
+    function updateCurResultAnswerStatus(answerStatus){
+        out = {}
+        out['roomKey'] = {{ roomKey|tojson }};
+        out['questionNum'] = roomData.curQuestionNumber;
+        out['answered'] = results[roomData.curQuestionNumber-1].answered = answerStatus;
+        socket.emit("roomCurQuestionAnswerStatusUpdate", data = out);
+    }
+    /**
+        * Updates the current question on the server database
+    **/
+    function updateCurQuestion(questionNum){
+        //update the current question locally
+        roomData.curQuestionNumber = questionNum;
+        $(".questionNum").text("Question #" + roomData.curQuestionNumber);
+        //update the current question on the server
+        socket.emit("roomCurQuestionUpdate", data = {
+            "roomKey": {{ roomKey|tojson }},
+            "curQuestion": roomData.curQuestionNumber
+        });
+    }
+    /**
+    * Updates the current question type on the server database: QUestion typ eis used for what type question is being sent by the host currently: 0 is tossup, 1 is bonus
+    **/
+    function updateCurQuestionType(type){
+        //update the current question type locally
+        curQuestionType = type;
+
+        //update the current question type on the server
+        socket.emit("roomCurQuestionTypeUpdate", data = {
+            "roomKey": {{ roomKey|tojson }},
+            "curQuestionType": type
+        });
+    }
+    /**
+    * Resets the results form to the values stored in the results array or to default values if no results exist for this question
+    **/
+    function resetResults(){
+        console.log("Resetting Results")
+
+        //Default Values if no results exist for this question
+        if(results.length < roomData.curQuestionNumber){
+            console.log("No Results for this question; Creating default")
+
+          //make the questionsend and input classes visible and albe to be edited
+            $(".questionSend").removeClass("hidden");
+            $(".questionInput").removeClass("hidden");
+            $("#questionSendButton").attr("disabled", false);
+            $("#questionInput").text("");
+            $("#questionInput").attr("disabled", false);
+
+            //hide the question view
+            $(".questionView").addClass("hidden");
+
+            //and create a new result object for this question
+            results.push({
+                "teamAnsweredKey": "",
+                "playerAnsweredKey": "", 
+                "questionNum": roomData.curQuestionNumber,
+                "tossup":false, 
+                "bonus1":false,
+                "bonus2":false,
+                'tossupQuestion':"",
+                'bonus1Question':"",
+                'bonus2Question':"",
+                'tossupAnswer':"",
+                'bonus1Answer':"",
+                'bonus2Answer':"",
+            })
+            //send this new result object to the server and then reset the results again to reload form server
+            sendResultData();
+            resetResults();
+        }
+        //otherwise load the results from the results array
+        else{
+            console.log("Loading Results from Array")
+            let resultData = results[roomData.curQuestionNumber-1];
+          
+            //reset send Question div
+            let questionType = ['tossup', 'bonus1', 'bonus2'][roomData.curQuestionType]
+            console.log(resultData)
+            //If the question has been sent; disable the send button and the input
+            if(resultData[questionType + "Question"] != ""){
+                $("#questionSendButton").attr("disabled", true);
+                $("#questionInput").val(resultData[questionType+"Question"]);
+                $("#questionInput").attr("disabled", true);
+            }
+            //otherwise enable the send button and the input
+            else {
+                $("#questionSendButton").attr("disabled", false);
+                $("#questionInput").val("");
+                $("#questionInput").attr("disabled", false);
+            }
+            //if the question has been answered; disable the question send input and reveal question view
+            if(resultData[questionType+"Answer"] != ""){
+                $(".questionSend").addClass("hidden");
+                $(".questionInput").addClass("hidden");
+                $(".questionView").removeClass("hidden");
+                //Show the final accepted question and answer 
+                $(".preAnsweredQuestionHolder").prop("disabled", true);
+                $(".preAnsweredAnswerHolder").prop("disabled", true);
+                $(".preAnsweredAnswerHolder").val(resultData[questionType+"Answer"]);
+                $(".preAnsweredQuestionHolder").val(resultData[questionType+"Question"]);
+
+                //hide the send Results div
+                $("#sendResults").addClass("hidden");
+            }
+            else{//otherwise hide the question View and clear the text from it
+                $(".questionSend").removeClass("hidden");
+                $(".questionInput").removeClass("hidden");
+
+                $(".questionView").addClass("hidden");
+                $(".preAnsweredAnswerHolder").val(resultData[questionType+"Answer"]);
+                $(".preAnsweredQuestionHolder").val(resultData[questionType+"Question"]);
+
+                //reveal the sendRestults div
+                $("#sendResults").removeClass("hidden");
+            }
+            
+
+
+        }
+
+    }
 </script>{%endblock%}
 {%block styles%}<style>
     .input-group{
@@ -22,16 +248,416 @@
         background-color: var(--quinary-color);
         border-color: var(--quinary-color);
     }
+    #teamsList{
+        position: absolute;
+        right: 1%;
+        top: 1%;
+        width:29%;
+        height:98%;
+        border: 1px solid blue;
+        border-radius: 25px;
+        overflow: scroll;
+        background-color: var(--quinary-color);
+        color: var(--tetratary-color);
+    }
+    
+    .overflow-container::-webkit-scrollbar, .drop-zone::-webkit-scrollbar, .drop-zone>*::-webkit-scrollbar, .selectedTeam>*::-webkit-scrollbar{
+        width: 10px;
+      display: none;
+    }
+    
+    #teamSelector{
+        position: relative;
+        width: 100%;
+        height: 300px;
+        background-color: var(--secondary-color);
+        color: var(--primary-color);
+        border-radius: 25px;
+    }
+    .drop-zone{
+        width:100%;/*will distribute items equally across flex container*/
+        margin:1%;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        overflow-y: scroll;
+        overflow-x: scroll;
+    
+    }
+    .drop-zone>h3{
+        overflow-y: scroll;
+        overflow-x: scroll;
+        white-space: nowrap;
+    }
+    
+    #roomTeams{
+        position: absolute;
+        left: 1%;
+        top: 1%;
+        display: flex;
+        justify-content: space-evenly;
+    
+    
+        width: 68%;
+        height: 98%;
+    }
+    .droppable{
+        
+        border: 5px dotted var(--primary-color);
+        margin:2%;
+        max-height: 80%;
+        max-width: 100%;
+        flex:1;
+        /*Aligns text in center*/
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        
+    }
+    .dragging{
+        opacity: .25;
+        background-color: var(--primary-color);
+    }
+    .selectedTeam>*{
+        font-weight: 800;
+        font-size: xx-large;
+        overflow-x: scroll;
+        overflow-y: scroll;
+    
+    }
+    .selectedTeam{
+        max-width: 100%;
+    }
+    #teamsDiv{
+        margin-top: 5%;
+    }
+    body{
+        height: 100vh;
+    }
+    #eventTab
+    {
+        position: fixed;
+        bottom: 0;
+    }
+
+    .nav-item:hover{
+        background-color: var(--primary-color);
+        color: var(--secondary-color);
+    }
+    .arrow-right {
+        width: 0; 
+        height: 0; 
+        border-left: 20px solid green;
+        border-right: 20px solid transparent;
+        border-bottom: 20px solid transparent;
+        border-top: 20px solid transparent;
+        background:none;
+    }
+    .arrow-left {
+        width: 0; 
+        height: 0; 
+        border-left: 20px solid transparent;
+        border-right: 20px solid red;
+        border-bottom: 20px solid transparent;
+        border-top: 20px solid transparent;
+        background: none;
+    }
+    .arrows{
+        display: inline-flex;
+        justify-content: center;
+        align-items: center;
+        gap:10px;
+        border:5px solid black;
+        background-color: #00000;
+    }
+    .tossup-header{
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        gap: 5px;
+        border: 1px solid black;
+    }
+    .result-holder>*{
+        border: 1px solid blue;
+    }
+    .result-holder{
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        flex-direction: column;
+        gap: 10px;
+        border: 1px solid black;
+    }
+    .toss-up, .Bonus>*{
+        display: inline-flex;
+        align-items: center;
+    }
+    .form-select{
+        width: auto;
+    }
+    #questionTypeSelector{
+        width:100%;
+        height:100%;
+        border : 1px solid blue;
+        display:flex;
+        justify-content: center;
+    }
+    .checkmark {
+        color: green; 
+        font-size:6em;
+        margin-top:0;
+    }
+    .preAnsweredQuestionHolder, .preAnsweredAnswerHolder{
+        font-size: 10px;
+    }
+    .preAnsweredAnswerHolder:disabled, .preAnsweredQuestionHolder:disabled{
+        background-color: white;
+        color: black;
+    }
+    .questionAnswerHolder{
+        display:flex;
+        flex-direction: column;
+        align-items: end;
+        gap: 10px;
+    }
+    .questionOrAnswerHolder{
+        display: flex;
+        flex-direction: row;
+        justify-content: center;
+        align-items: center;
+
+    }
+
+    .checkmarkLabel{
+        font-size:12px; 
+        margin-top: 1%;
+    }
+    .checkHolder{
+        margin-right: 2%;
+    }
+    .questionAnswerLabel{
+        margin-right:1%;
+    }
+    #verifyAnswer{
+        display:flex;
+        flex-direction: row;
+        flex-wrap: nowrap;
+    }
+    .questionContainer{
+        position: relative;
+        height:440px;
+    }
+    .horizantalTeamLabel{
+        flex-basis:100%;
+        text-align: center;
+    }
+    .verticalTeamLabel{
+        flex-basis:100%;
+        text-align: center;
+        /**text-orientation: upright;**/
+        height: 100%;
+    }
+    #leftTeam>.verticalTeamLabel{
+        writing-mode: vertical-lr;
+    }
+    #rightTeam>.verticalTeamLabel{
+        writing-mode: vertical-lr;
+        
+    }
+    #topTeam{
+        width:75%;
+        height:10%;
+        left: 12.5%;      
+        top:1%;  
+    }
+    #bottomTeam
+    {
+        width:75%;
+        left: 12.5%;
+        top:53%;
+        height:10%;
+    }
+    #leftTeam{
+        height:62%;
+        top:1%;
+        left:1%;
+        width:10.5%;
+    }
+    #rightTeam{
+        right:1%;
+        width:10.5%;
+        top:1%;
+        height:62%;
+    }
+    .questionSend, .questionView{
+        display:flex;
+        justify-content: center;
+        position:absolute;
+        top:12%;
+        left:12.5%;
+        width:75%;
+        height:40%; 
+        border: var(--secondary-color) dashed;
+        border-radius: 25px;
+        padding:1%;
+
+    }
+   
+    #sendResults{
+        position:absolute;
+        top:64%;
+        left:12.5%;
+        width:75%;
+        height:36%;
+        border: var(--primary-color) dashed;
+        border-radius: 25px;
+    }
+    #leftTeam, #rightTeam{
+        display: flex;
+        flex-direction: column;
+        justify-content: space-evenly;
+        align-items: center;
+        flex-wrap: wrap;
+    }
+    #topTeam, #bottomTeam{
+        display: flex;
+        flex-direction: row;
+        justify-content: space-evenly;
+        align-items: center;
+        flex-wrap: wrap;
+    }
+    .teamHolder{
+        position: absolute;
+    }
+    
+    
+    #liveQuestionReciever{
+        overflow:auto;
+        height:100%;
+    }
+    #verifyAnswer{
+        display: flex;
+        flex-direction: row;
+        justify-content: center;
+        align-items: center;
+        height:100%;
+        width:100%;
+    }
+    
+    
+    
+    
 </style>{%endblock%}
 
 
 {%block content%}
-<h1>LIVE TOURN</h1>
 
 <!-- Space for host to send out a question to the players-->
-<div class="input-group">
-    <button class="input-group-text btn btn-primary" id="question-Send">Insert Question</button>
-    <textarea class="form-control" id="questionInput" rows="5"></textarea>
-</div>
+
+<div class="container tab-content">
+    <div class="container tab-pane fade show active" id="teamsDiv">
+        <h1 class="center">Assign Teams</h1>
+        <div class="container center" id="teamSelector">
+            <div id="roomTeams">
+                <div class="drop-zone"id="Team A">
+                    <h3>Team A</h3>
+                    <div class="droppable" ondrop="drop(event)" ondragover="allowDrop(event)"><h1>Add Team Here</h1></div>
+
+                </div>
+                <div class="drop-zone"id="Team B">
+                    <h3>Team B</h3>
+                    <div class="droppable" ondrop="drop(event)" ondragover="allowDrop(event)"><h1>Add Team Here</h1></div>
+                </div>
+                <div class="drop-zone"id="Team C">
+                    <h3>Team C</h3>
+                    <div class="droppable" ondrop="drop(event)" ondragover="allowDrop(event)"><h1>Add Team Here</h1></div>
+                </div>
+                <div class="drop-zone"id="Team D">
+                    <h3>Team D</h3>  
+                    <div class="droppable" ondrop="drop(event)" ondragover="allowDrop(event)"><h1>Add Team Here</h1></div>
+        
+                </div>
+
+            </div>
+            <div class="overflow-container" ondrop="drop(event)" ondragover="allowDrop(event)" id="teamsList">
+                <h1>Teams</h1>
+            </div>  
+        </div>
+    </div>
+    <div  class="container tab-pane fade" id="QuestionSender">
+        <div class="container" id="questionForm">
+            <div class="tossup-header">
+                <h1 class="questionNum"></h1>
+                <h3 class = "questionType"></h3>
+                <div class="arrows">
+                    <button name="task" class="back arrow-left" ></button>
+                    <button name="task" class="advance arrow-right"></button>
+                </div>
+            </div>
+            <ul class="nav nav-tabs " id="questionTypeSelector" role="tablist">
+                <li class="nav-item" role="presentation"><button class="nav-link active questionTypeRefresher" id="tossup-tab" data-bs-toggle="tab" data-bs-target="#tossupQuestion" type="button" role="tab" aria-selected="true">Tossup</button></li>
+                <li class="nav-item" role="presentation"><button class="nav-link questionTypeRefresher " id="bonus1-tab" data-bs-toggle="tab" data-bs-target="#bonus1Question" type="button" role="tab"  aria-selected="true">Bonus #1</button></li>
+                <li class="nav-item" role="presentation"><button class="nav-link questionTypeRefresher" id="bonus2-tab" data-bs-toggle="tab" data-bs-target="#bonus2Question" type="button" role="tab" aria-selected="false">Bonus#2</button></li>
+            </ul>
+               
+                <div class="questionContainer container " >
+                    <div id="topTeam" class="teamHolder">
+                        <div class="horizantalTeamLabel" id="ALabel"> Team A</div>
+                    </div>
+                    <div id="bottomTeam" class="teamHolder">
+                        <div class="horizantalTeamLabel" id="CLabel"> Team C</div>
+                    </div>
+                    <div class="verticalTeamHolder teamHolder" id="leftTeam">
+                        <div class="verticalTeamLabel" id="DLabel"> Team D</div>
+                    </div>
+                    <div class="verticalTeamHolder teamHolder" id="rightTeam">
+                        <div class="verticalTeamLabel" id="BLabel"> Team B</div>
+                    </div>
+                    <div class="questionSend container ">
+                        <button class="input-group-text btn btn-primary" id="questionSendButton">Send Tossup</button>
+                        <textarea class="form-control" id="questionInput" rows="4"></textarea> 
+                    </div>
+                    <div class = "questionView hidden">
+                        <div class="checkHolder">   
+                            <h6 class="checkmarkLabel" >Question Already Sent</h6>
+                            <i class="fas fa-check checkmark"></i>
+                        </div>
+                        <div class="questionAnswerHolder">
+                            <div class="questionOrAnswerHolder">
+                                <h3 class="questionAnswerLabel"> Question</h6>
+                                <textarea name="" class="preAnsweredQuestionHolder"  cols="45" rows="3"></textarea>
+                            </div>
+                            <div class="questionOrAnswerHolder">
+                                <h3 class="questionAnswerLabel">Answer</h6>
+                                <textarea name=""  class="preAnsweredAnswerHolder"cols="45" rows="3"></textarea>
+                            </div>
+                        </div>
+                       
+                    </div>                
+                    <div id="sendResults" class="center">
+                        <h6 id="liveQuestionHostInfo">Live Results</h6>
+                        <div id="playerScreen">
+                            <div id="liveQuestionReciever"></div>
+                        </div>
+                        <div id="verifyAnswer" class="hidden">
+                            <button class="btn btn-success" id="acceptAnswer"><i class="fas fa-check"></i></button>
+                            <button class="btn btn-danger" id="rejectAnswer"><i class="fas fa-times"></i></button>
+                            <div id="liveAnswerReciever"></div>
+                        </div>
+                    </div>
+            </div>
+         </div>    
+
+    </div>
+
+
+<ul class="nav nav-tabs " id="eventTab" role="tablist">
+    <li class="nav-item" role="presentation">
+        <button class="nav-link active" id="selectTeam-tab" data-bs-toggle="tab" data-bs-target="#teamsDiv" type="button" role="tab" aria-selected="true">Select Teams</button>
+    </li>
+    <li class="nav-item" role="presentation">
+        <button class="nav-link" id="question-tab" data-bs-toggle="tab" data-bs-target="#QuestionSender" type="button" role="tab" aria-selected="false">Send Question</button>
+    </li>
+</ul>
 
 {%endblock%}

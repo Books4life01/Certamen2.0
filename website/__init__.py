@@ -34,7 +34,7 @@ def create_app():
     app.register_blueprint(play, url_prefix="/play", db=db)
     app.register_blueprint(host, url_prefix="/host", db=db)
     app.register_blueprint(manage, url_prefix="/host/manage", db=db)
-
+    
     #importing the models from models.py
     from .models import Player, Tournament, Room, Team, Result
     #create the database
@@ -48,12 +48,12 @@ def createSocketServer(app):
     socketio = SocketIO(app, cors_allowed_origins="*")
 
     #import models
-    from .routes.updateSocket import on_roomResultUpdate, on_teamAssignmentUpdate, on_roomCurQuestionUpdate
+    from .routes.updateSocket import on_roomResultUpdate, on_teamAssignmentUpdate, on_liveQuestionUpdate, on_roomCurQuestionNumberOrTypeUpdate
     from .routes.refreshSocket import on_roomDataRefreshRequest, on_tournDataRefreshRequest
-    from .routes.baseSocket import on_connect, on_disconnect, on_roomClientConnect, on_roomHostConnect
+    from .routes.baseSocket import on_disconnect, on_roomClientConnect, on_roomHostConnect
     
     #BASES
-    socketio.on_event("connect", on_connect)
+    # socketio.on_event("connect", on_connect)
     socketio.on_event("disconnect", on_disconnect)
     socketio.on_event("roomClientConnect", on_roomClientConnect)
     socketio.on_event("roomHostConnect", on_roomHostConnect)
@@ -63,7 +63,12 @@ def createSocketServer(app):
     #UPDATES
     socketio.on_event("teamAssignmentUpdate", on_teamAssignmentUpdate)
     socketio.on_event("roomResultUpdate", on_roomResultUpdate)
-    socketio.on_event("roomCurQuestionUpdate", on_roomCurQuestionUpdate)
+
+
+    socketio.on_event("roomCurQuestionUpdate", on_roomCurQuestionNumberOrTypeUpdate)
+    socketio.on_event("liveQuestionUpdate", on_liveQuestionUpdate)
+    socketio.on_event("roomCurQuestionTypeUpdate", on_roomCurQuestionNumberOrTypeUpdate)
+
 
 
 

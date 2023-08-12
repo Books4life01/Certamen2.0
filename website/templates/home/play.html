@@ -2,6 +2,7 @@
 {%block title%}Play{%endblock%}
 {%block styles%}
 <style>
+
     
     
 
@@ -12,21 +13,29 @@
         let hasPlayerKey = document.getElementById("hasPlayerKey")
         hasPlayerKey.addEventListener("click", function(){
             let playerKeyDiv = document.getElementById("playerKeyDiv");
+            let teamKeyDiv = document.getElementById("teamKeyDiv");
+            let tournKeyDiv = document.getElementById("tournKeyDiv");
             let playerNameDiv = document.getElementById("playerNameDiv");
             if(hasPlayerKey.checked){
                 //iF THE PLAYER HAS A Key TO USE: 
                 //-reveal the player Key div
-                //-hide the player name div
-                //-clear the player name input
+                //-hide the team key div
+                //-clear the team key input
                 playerKeyDiv.classList.remove("hidden");
+                tournKeyDiv.classList.add("hidden");
+                teamKeyDiv.classList.add("hidden");
                 playerNameDiv.classList.add("hidden");
-                playerNameDiv.children[1].value = ""; 
+                teamKeyDiv.children[1].value = ""; 
+                tournKeyDiv.children[1].value = "";
+                playerNameDiv.children[1].value = "";
             }
             else{
                  //iF THE PLAYER DOES NOT HAVE A Key TO USE: 
-                //-reveal the player Key div
-                //-hide the player name div
-                //-clear the player name input
+                //-reveal the team key div
+                //-hide the player key div
+                //-clear the player key input
+                teamKeyDiv.classList.remove("hidden");
+                tournKeyDiv.classList.remove("hidden");
                 playerNameDiv.classList.remove("hidden");
                 playerKeyDiv.classList.add("hidden");
                 playerKeyDiv.children[1].value = ""; 
@@ -38,24 +47,28 @@
 {%block content%}
 <h1 class = "center">Play Certamen</h1>
 <div class="container box" id="form-container">
-    <h5 class="center">Enter Tournament and Player Keys to join Game</h2>
+    <h5 class="center">Enter Tournament and Team Key or Player Key</h5>
    
     <!-- Ask for Tournament Key and Player Key-->
     <form action="/play/joinTourn" class="form-inline">
         <!-- Div to Enter Tournament Key: using text input-->
-        <div class="form-group">
+        <div class="form-group" id="tournKeyDiv">
             <label for="tournKeyInput">Tournament Key</label>
             <input type="text" class="form-control form" id="tournKeyInput" name="tournKey" placeholder="Enter Tournament Key">
+        </div>
+         <!--Div to Enter either Player Key or Player Name: using text input     (USES JS to hide one but not the other)-->
+         <div class="form-group hidden" id="playerKeyDiv">
+            <label for="playerKeyInput" id="playerKeyInputLabel">Player Key</label>
+            <input type="text" class="form-control" id="playerKeyInput" name="playerKey" placeholder="Enter your Key">
         </div>
         <!--Div to see if using Player Key: using checkbox-->
         <div class="form-group form-check">
             <label for="hasPlayerKey" class="form-checek-label">Have you Recieved a Player Key?</label>
             <input class = "form-check-input" type="checkbox" id="hasPlayerKey" value="hasPlayerKey">
         </div>
-        <!--Div to Enter either Player Key or Player Name: using text input     (USES JS to hide one but not the other)-->
-        <div class="form-group hidden" id="playerKeyDiv">
-            <label for="playerKeyInput" id="playerKeyInputLabel">Player Key</label>
-            <input type="text" class="form-control" id="playerKeyInput" name="playerKey" placeholder="Enter your Key">
+        <div class="form-group" id="teamKeyDiv">
+            <label for="teamKeyInput" id="teamKeyInputLabel">Team Key</label>
+            <input type="text" class="form-control" id="teamKeyInput" name="teamKey" placeholder="Enter your Name">
         </div>
         <div class="form-group" id="playerNameDiv">
             <label for="playerNameInput" id="playerNameInputLabel">Player Name</label>

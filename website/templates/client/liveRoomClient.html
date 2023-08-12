@@ -1,0 +1,193 @@
+{%extends "home/base.html"%}
+{%block title%}LiveRoomCLient{%endblock%}
+
+{%block script%}
+<!--Stylesheet-->
+<link rel="stylesheet" href="{{url_for('static', filename='style/liveQuestion.css')}}">
+<script>
+    //Global variables
+    let roomKey = {{ roomKey|tojson }};
+    let player = {{ player|tojson}};
+    let results = [];
+    let roomData = {};
+    const socket = io.connect('http://192.168.4.127:8080');
+
+    //Document Ready
+    $(document).ready(() => {
+        //Set up Space Bar to buzz in
+        $(document).on("keypress", function(e){
+            if(e.which == 32){//Space Bar key
+                //if the player hasnt already buzzed in
+                if(!(player==undefined) && !roomData['playersAttempted'].includes(player['privateKey']) && roomData.curLiveQuestion != "")socket.emit("liveQuestionUpdate", data = {"roomKey": roomKey, "playerInitiated":player,"questionNum": roomData.curQuestionNumber,"questionType": roomData.curQuestionType, "actionType":"pause","questionNum":roomData.curQuestionNumber,  "answer":$("#answerInput").val()})
+            }
+        });
+        //Set up submit button to submit answer
+        $("#submitAnswerButton").click(()=>{
+            submitAnswer();
+        })
+
+        //requestion room Refresh
+        socket.emit('roomClientConnect', data = {"roomKey": roomKey, "playerKey": player.privateKey});
+        socket.emit("roomDataRefreshRequest", data = {"roomKey": roomKey});
+    });
+    
+    //SOCKET HANDLERS
+    socket.on('roomDataUpdate', data=>{
+        if(data.privateKey == roomKey || data.publicKey == roomKey){
+            roomData = data;
+            $(".questionNum").text("Question #" + roomData.curQuestionNumber);
+            onRoomDataUpdate();
+        }
+    });
+   
+    socket.on("roomTeamsUpdate", (data) =>{
+        //Ensure that the room we are recieving data for is the room we are in
+        if (data.roomKey == {{ roomKey|tojson }}){
+            let teams = data.teams;
+            console.log(teams);
+        }
+        
+    });
+    
+
+socket.on('roomResultsUpdate', data =>{
+    results = data['resultList'];
+    onRoomDataUpdate();
+})
+
+function onRoomDataUpdate(){
+    //reset question num and type
+    $("#questionTitle").text("Question #" + roomData.curQuestionNumber + ": " + ["Tossup","Bonus 1","Bonus 2"][roomData.curQuestionType]);
+    //reset live question
+    $("#liveQuestionReciever").text(roomData.curLiveQuestion);
+    //reset live answer
+    $("#liveAnswerReciever").text(roomData.curLiveQuestionAnswer);
+    //reset info boxes for hosts and clients
+    $("#liveQuestionClientInfo").text(roomData.clientInfo);
+    liveQuestionUpdate();
+
+
+
+
+
+    //reset past Questions
+    if(results.length > 0){
+        $("#pastQuestions").empty();
+        $("#pastQuestions").append($("<h1 ></h1>").text("Past Questions").css("text-align","center"));
+
+        results.forEach(result => {
+            if(result['questionNumber']>=roomData['curQuestionNumber'])return;
+            let question = $("<div class='pastQuestion'></div>").text("Tossup"+result['questionNumber'] ).attr("id", result['id']);
+            question.on("mouseenter", (event)=>{
+                $("#" + event.currentTarget.id).append($("<div class='hoverbox' id='hoverbox" + event.currentTarget.id + "'></div>").append($(`
+                    <div class='center'>Tossup #${result['questionNumber']}</div>
+                    <div>Question: ${result['tossupQuestion']}</div>
+                    <div>Answer: ${result['tossupAnswer']}</div>
+                
+                `)))
+            });
+            question.on("mouseleave", (event)=>{
+                $("#hoverbox" + event.currentTarget.id).remove();
+            });
+            $("#pastQuestions").append(question);
+            
+            
+        });
+        
+    }
+}
+function resetResults(){
+        
+}
+</script>
+<script src ="{{url_for('static', filename='script/liveQuestion.js')}}"></script>
+
+{%endblock%}
+
+{%block styles%}<style>
+    #currentQuestionHolder{
+        font-size: 2em;
+        font-weight: bold;
+        text-align: center;
+        border: 1px dotted  white;
+        width:50%;
+        height:60%;
+        margin: 0 0;
+    }
+    
+    #liveQuestionReciever{
+        border: 1px dotted blue;
+        height: 50%;
+        overflow: auto;
+    }
+    
+    .container{
+        position: relative;
+        display: flex;
+        flex-direction: row;
+        justify-content: space-evenly;
+        align-items: center;
+        border: 1px dotted red;
+        width:100%;
+        max-width:none;
+        height:500px;
+
+    }
+    #submitAnswer{
+        display: flex;
+        flex-direction: row;
+    }
+    .hidden{
+        display:none !important;
+    }  
+    #questionAnswer{
+        height:20%;
+    } 
+    
+    #answerContainer{
+        border: 1px dotted yellow;
+        display: flex;
+        flex-direction: row;
+        flex-wrap: nowrap;
+    } 
+    
+    
+</style>{%endblock%}
+
+{%block content%}
+<div class="container">
+    <div id="pastQuestions">
+    </div>
+    
+    <div id="topTeam" class="teamHolder">
+        <div class="horizantalTeamLabel" id="ALabel"> Team A</div>
+    </div>
+    <div id="bottomTeam" class="teamHolder">
+        <div class="horizantalTeamLabel" id="CLabel"> Team C</div>
+    </div>
+    <div class="verticalTeamHolder teamHolder" id="leftTeam">
+        <div class="verticalTeamLabel" id="DLabel"> Team D</div>
+    </div>
+
+    <div id="currentQuestionHolder">
+        <h1 class="center" id="questionTitle">Question #1</h1>
+        <div id="liveQuestionReciever"></div>
+        <div id="questionAnswer">
+            <h6 id="liveQuestionClientInfo">Press Space to Buzz in</h6>
+            <div class="hidden form-group"id="submitAnswer">
+                <textArea class="form-control" id="answerInput"></textArea>
+                <button class="input-group-text btn btn-primary"id="submitAnswerButton">Submit Answer</button>
+            </div>
+            <div id="liveAnswerReciever" class="hidden">
+            </div>
+        </div>
+        
+    </div>
+    <div class="verticalTeamHolder teamHolder" id="rightTeam">
+        <div class="verticalTeamLabel" id="BLabel"> Team B</div>
+
+    </div>
+
+    
+</div>
+{%endblock%}

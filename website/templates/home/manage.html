@@ -13,7 +13,7 @@
 {%block content%}
 <h1 class="center">Manage Tournament</h1>
     <div class="center box">
-        <form action="/host/manage/authenticateTourn" method = "GET">
+        <form action="/host/manage/tourn" method = "GET">
             <label for="tournKeyInput">Enter Tournament Key</label>
             <input type="text" name="tournKey" id="tournKeyInput" placeholder="Tournament Key">
             <input type="submit" value="Enter">
@@ -21,14 +21,37 @@
         {%with messages = get_flashed_messages()%}
             {%if messages%}
                 {%for message in messages%}
-                <div class="alert alert-danger" role="alert">
-                    {{message}}
-                </div>
+                    {%if "Tournament" in message%}
+                            <div class="alert alert-danger" role="alert">
+                                {{message}}
+                            </div>
+                    {%endif%}
                 {%endfor%}
             {%endif%}
         {%endwith%}
 
     </div>
+<h1 class="center">Manage Room</h1>
+    <div class="center box">
+        <form action="/host/manage/room" method = "GET">
+            <label for="roomKeyInput">Enter Room Key</label>
+            <input type="text" name="roomKey" id="roomKeyInput" placeholder="Room Key">
+            <input type="submit" value="Enter">
+        </form>
+        {%with messages = get_flashed_messages()%}
+            {%if messages%}
+                {%for message in messages%}
+                    {%if "Room" in message%}
+                        <div class="alert alert-danger" role="alert">
+                            {{message}}
+                        </div>
+                    {%endif%}
+                {%endfor%}
+            {%endif%}
+        {%endwith%}
+    </div>  
+   
+
 
 
 {%endblock%}

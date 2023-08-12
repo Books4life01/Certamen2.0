@@ -1,5 +1,6 @@
 from flask import Blueprint, render_template, request, redirect, flash, url_for
 from ..models import Player, Tournament, Room
+from . updateSocket import emitTournData
 from .. import db
 
 manage = Blueprint('manage', __name__)#passing the name of the blueprint and the name of the file
@@ -64,6 +65,12 @@ def deleteTourn():
     tournPrivateKey = request.args.get('tournKey')
     tourn = Tournament.getTournByPrivate(tournPrivateKey)
     tourn.delete()
+    return ""
+@manage.route('/room', methods=['DELETE'])
+def deleteRoom():
+    roomPrivateKey = request.args.get('roomKey')
+    room = Room.getRoomByPrivate(roomPrivateKey)
+    room.delete()
     return ""
 
     
