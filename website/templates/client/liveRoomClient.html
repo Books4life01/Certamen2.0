@@ -83,7 +83,15 @@ function onRoomDataUpdate(){
                     <div class='center'>Tossup #${result['questionNumber']}</div>
                     <div>Question: ${result['tossupQuestion']}</div>
                     <div>Answer: ${result['tossupAnswer']}</div>
+                    <div class='center'>Bonus #1</div>
+                    <div>Question: ${result['bonus1Question']}</div>
+                    <div>Answer: ${result['bonus1Answer']}</div>
+                    <div class='center'>Bonus #2</div>
+                <div>Question: ${result['bonus2Question'] ? results['bonus2Question'] != '': "Bonus Not Sent Yet"}</div>
+                    <div>Answer: ${result['bonus2Answer'] ? results['bonus2Answer'] != '':"No Response"}</div>
+
                 
+
                 `)))
             });
             question.on("mouseleave", (event)=>{

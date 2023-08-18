@@ -1,7 +1,7 @@
 //Global variables
 let results = [];
 let roomData = {};
-const socket = io.connect('http://192.168.4.127:8080');
+const socket = io.connect('http://172.16.65.246:8080');
 
 //golbal timer for the wuestion timeout: used in liveQuestion.js
 var intervalTimer;

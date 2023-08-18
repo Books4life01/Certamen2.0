@@ -6,6 +6,7 @@
     let tournKey = {{ tournKey|tojson }};
     console.log(tournKey);
     let tourn = null;
+    let statData = {};
     socket.on("connect", () => {
         console.log("connected");
         //Reqeust Data Refresh from the server
@@ -19,6 +20,9 @@
             $("#tournLabel").text("LIVE TOURN Private: " + tourn.privateKey + "Public:" + tourn.publicKey);
         }
     });
+    socket.on("tournStatData", (data)=>{
+        statData = data;
+    })
     //Receive Tournament Data from the server
     socket.on("tournRoomsUpdate", (data) => {
         //Ensure that the tournament we are looking at is the same as the one we are recieving data for
@@ -105,6 +109,11 @@
             //show warning modal
             $("#deleteTournWarning").modal("show");
         });
+        $("#showStatistics").click(()=>{
+            reloadTournStatistics();
+            $("#tournamentStatistics").modal("show");
+            $("")
+        })
         $('#deleteRoom').click(() =>{
             //show warning modal
             $("#deleteRoomWarning").modal("show");
@@ -126,6 +135,9 @@
 
 
     });
+
+
+    function reloadTournStatistics(){}
 </script>{%endblock%}
 {%block styles%}<style>
     .btn-primary{
@@ -231,6 +243,93 @@
         justify-content: center;
         gap:1%;
     }
+
+
+    #tournamentStatistics>.modal-dialog{
+        width:80%;
+        height:100%;
+        margin: 20% 10% 20% 10%;
+        max-width:none;
+    }
+    #tournamentStatistics>*>.modal-content{
+        height:100%;
+    }
+    #tournamentStatistics>*>*>*{
+        height:5%;
+    }
+    #tournamentStatistics>*>*>.modal-body{
+        height:50%;
+        width:100%;
+        padding:0 0 0 0;
+        position:relative;
+    }
+    .statBorder{
+        border: dotted green 1px; 
+    }
+    #playerLeaderBoard{
+        position:absolute;
+        width:90%;
+        margin-left:5%;
+        height:20%;
+        margin-top:75%;
+        text-align: center;
+    }
+    .horizantalInfiniteTextWrapper{
+        display:flex;
+        justify-content:space-between;
+        align-items: center;
+        overflow:hidden;
+        height:80%;
+    }
+    
+    #TopTeamsLabel{
+        height:20%;
+        margin-top:0%;
+    }
+    .playerScore{
+        animation: move-rtl 5s linear infinite;
+        white-space:nowrap;
+
+    }
+    .teamScore{
+        animation: move-ttb 6000ms linear infinite;
+        white-space: nowrap;
+    }
+    #teamLeaderBoard{
+        position: absolute;
+        width:40%;
+        margin-left:59%;
+        height:77%;
+        margin-top:1%;
+    }
+    .verticalInfiniteTextWrapper{
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: start;
+        overflow:hidden;
+        height:80%;
+        margin-top:20%;
+        border: white dotted 1px;
+    }
+    @keyframes move-rtl{
+        0%{
+            transform:translateX(0%);
+        }
+        100%{
+            transform:translateX(-120%);
+        }
+    }
+    @keyframes move-ttb{
+        0%{
+            transform:translateY(0%);
+        }
+        100%{
+            transform:translateY(100%);
+        }
+    }
+
+
     
     </style>{%endblock%}
     {%block content%}
@@ -244,7 +343,7 @@
 <div class="center" id="teamsInfo">
     <h1 class="center">Teams:</h1>
     <div id="teamsContainer" class="overflow-container center">
-        <div class="team" ><h6>Team Name</h6><h6>Edit Team</h6><h6>Private Key</h6><h6>Public Key</h6>/div>
+        <div class="team" ><h6>Team Name</h6><h6>Edit Team</h6><h6>Private Key</h6><h6>Public Key</h6></div>
     </div>
 </div>
 <div class="modal fade" tabindex="-1" id="addRoomModal">
@@ -306,6 +405,65 @@
         </div>
     </div>
 </div>
+<!-- Statistics Modal -->
+<div class = "modal fade" tabindex="-1" id="tournamentStatistics">
+    <div class="modal-dialog" role ="document">
+        <div class="modal-content">
+            <div class="modal-header"></div>
+            <div class="modal-body">
+                <div class="statBorder" id="playerLeaderBoard">
+                    <!-- Top PLayers by Points -->
+                    <h1 id="TopTeamsLabel">Top Players</h1>
+                    <div class="horizantalInfiniteTextWrapper">
+                        <h3 class="playerScore">PLayer #1 10pts</h3>
+                        <h3 class="playerScore">PLayer #1 10pts</h3>
+
+                        <h3 class="playerScore">PLayer #1 10pts</h3>
+
+                        <h3 class="playerScore">PLayer #1 10pts</h3>
+                        <h3 class="playerScore">PLayer #1 10pts</h3>
+                        <h3 class="playerScore">PLayer #1 10pts</h3>
+
+                        <h3 class="playerScore">PLayer #1 10pts</h3>
+
+                        <h3 class="playerScore">PLayer #1 10pts</h3>
+                        <h3 class="playerScore">PLayer #1 10pts</h3>
+                        <h3 class="playerScore">PLayer #1 10pts</h3>
+
+                        <h3 class="playerScore">PLayer #1 10pts</h3>
+
+                        <h3 class="playerScore">PLayer #1 10pts</h3>
+                    </div>
+                </div>
+                <div class="statBorder" id="teamLeaderBoard">
+                    <!-- List all the teams by WLT and Points -->
+                    <div class="verticalInfiniteTextWrapper">
+                        <h3 class="teamScore">Team #1 10pts</h3>
+                        <h3 class="teamScore">Team #1 10pts</h3>
+
+                        <h3 class="teamScore">Team #1 10pts</h3>
+                        <h3 class="teamScore">Team #1 10pts</h3>
+                        <h3 class="teamScore">Team #1 10pts</h3>
+                        <h3 class="teamScore">Team #1 10pts</h3>
+                        <h3 class="teamScore">Team #1 10pts</h3>
+
+                        <h3 class="teamScore">Team #1 10pts</h3>
+                    </div>
+
+                </div>
+                <div class="statBorder" id="tournStats">
+                    <!-- Live Players -->
+                    <!-- Total Players and Teams -->
+                    <!-- Total Rooms and Live Rooms -->
+                </div>
+
+            </div>
+            <div class="modal-footer"></div>
+        </div>
+    </div>
+</div>
+
+
 
 <!--Delete Tournament Dialog-->
 <div class="modal fade" tabindex="-1" id="deleteTournWarning">
@@ -323,6 +481,7 @@
         </div>
     </div>
 </div>
+<!-- Delete Room Dialog -->
 <div class="modal fade" tabindex="-1" id="deleteRoomWarning">
     <div class="modal-dialog" role="document">
         <div class="modal-content warning-content modal-hexagon center">
@@ -344,7 +503,7 @@
     <div class="container-fluid" id="actionBar">
         <i class="fa-solid fa-plus fa-2xl" id="addItem" data-toggle="tooltip" data-placement="top" title="Create new Room or Tournament"></i>
         <i class="fa-solid fa-trash" id="deleteTourn" data-toggle="tooltip" data-placement="top" title="Delete this Tournament"></i>
-        
+        <i class="fa-solid fa-chart-simple" id="showStatistics" data-toggle="tooltip" data-placement="top" title="Show Tournament Statistics"></i>
     </div>
 
 </nav>

@@ -67,8 +67,17 @@ def emitRoomData(roomKey, brdcst):
 def emitTournData(tournKey, brdcst):
     tourn = Tournament.getTourn(tournKey)
     emit('tournDataUpdate', tourn.serialize, broadcast=brdcst)
+    stats = {
+        "rooms":[],
+        "tourn":tourn.serialize,
+        "teams":[team.serialize for team in tourn.teams],
+        "players":[player.serialize for player in tourn.players]
+    }
+    for room in tourn.rooms:
+        stats["rooms"].append({"data":room.serialize, "results":[result.serialize for result in room.results]})
+    emit('tournStatData', stats, broadcast=brdcst)
 def emitRoomLiveQuestionUpdate(roomKey, actionType, brdcst, player="None", extraData={}):
     room = Room.getRoom(roomKey)
     roomData = room.serialize
     emit('roomLiveQuestionUpdate', {"privateKey":room.privateKey,"publicKey":room.publicKey, "curLiveQuestion":roomData["curLiveQuestion"], "curLiveQuestionAnswer":roomData["curLiveQuestionAnswer"], "liveQuestionPaused":roomData["timer"]>0, "curQuestionType":roomData["curQuestionType"], "curQuestion":roomData["curQuestionNumber"], "playersAttempted":roomData["playersAttempted"], "actionType":actionType, "playerInitiated":player, "timer":roomData['timer'], "clientInfo":roomData['clientInfo'], "hostInfo":roomData['hostInfo'],"clientInfo":roomData['clientInfo']}, broadcast=brdcst, include_self=True)
-    
+
