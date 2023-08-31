@@ -173,6 +173,7 @@ function liveQuestionUpdate(){
         if(index == filtered.length - 1 && (roomData.curLiveQuestionAnswer != "" || roomData.timer != 0) )$("#" + player).css("color", "yellow");
     });
     
+    
 
     //turn the player who got the question right green
     if (roomData.correctPlayer != null && roomData.correctPlayer != "")$("#" + roomData.correctPlayer).css("color", "green"); 

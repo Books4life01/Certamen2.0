@@ -1,0 +1,101 @@
+tournStats = {}
+
+
+socket.on('tournStatData', function(data){
+    tournStats = data;
+    
+    //update the leaderboards on the statistics page
+    let topPlayers = getTopNPlayers(10);
+    let topTeams = getTopNTeams(10);
+
+    //add top players divs to the horizantal movers
+        topPlayers.forEach((player, index) =>{
+            $(".horizantalMover.first").append($("<div class='playerRanking'></div>").text(`#${index+1}:${topPlayers[index]['name']} ${topPlayers[index]['totalPoints']}`));
+            $(".horizantalMover.last").append($("<div class='playerRanking'></div>").text(`#${index+1}: ${topPlayers[index]['name']} ${topPlayers[index]['totalPoints']}`));
+        })
+        $(".horizantalMover.first").css("animation-duration", 16*topPlayers.length + "s");       
+        $(".horizantalMover.last").css("animation-duration", 16*topPlayers.length + "s");
+        $(".horizantalMover.last").css("animation-delay", 8*topPlayers.length + "s");
+
+        topTeams.forEach((player, index) =>{
+            $(".verticalMover.first").append($("<div class='teamRanking'></div>").text(`#${index+1}:${topTeams[index]['name']} ${topTeams[index]['totalPoints']}`));
+            $(".verticalMover.last").append($("<div class='teamRanking'></div>").text(`#${index+1}: ${topTeams[index]['name']} ${topTeams[index]['totalPoints']}`));
+        })
+        $(".verticalMover.first").css("animation-duration", 16*topTeams.length + "s");       
+        $(".verticalMover.last").css("animation-duration", 16*topTeams.length + "s");
+        $(".verticalMover.last").css("animation-delay", 8*topTeams.length + "s");
+
+    
+    
+
+
+
+
+});
+
+function reloadTournStats(){
+    $("")
+}
+/**
+ * 
+ * @param {} playerKey the public key of 
+ */
+function getStatsForPlayer(playerKey){
+    playerStats = {
+        "name":tournStats["players"].find(player => player['publicKey'] == playerKey)['name'],
+        "privateKey": tournStats['players'].find(player => player['publicKey'] == playerKey)['privateKey'], 
+        "rooms":{},
+        "totalPoints":0
+    }
+    tournStats['rooms'].forEach(room => {
+        room['results'].forEach(result => {
+            if(result['playerAnsweredKey'] == playerStats['privateKey']){
+                playerStats['rooms'][room['data']['name']] = result['totalPoints'];
+                playerStats['totalPoints']+=result['totalPoints'];
+            }
+        });
+    })
+    return playerStats;
+}
+/**
+ * 
+ * @param {*} teamKey  private key of the team
+ * @returns 
+ */
+function getStatsForTeam(teamKey){
+    teamStats = {
+        "name":tournStats["teams"].find(team => team['privateKey'] == teamKey)['name'],
+        "privateKey": tournStats['teams'].find(team => team['privateKey'] == teamKey)['privateKey'],
+        "rooms":{},
+        "totalPoints":0
+    }
+    tournStats['rooms'].forEach(room => {
+        room['results'].forEach(result => {
+            if(result['teamAnsweredKey'] == teamKey){
+                teamStats['rooms'][room['data']['name']] = result['totalPoints'];
+                teamStats['totalPoints']+=result['totalPoints'];
+            }
+        });
+    });
+    return teamStats;
+}
+function getTopNTeams(n){
+    topTeams = [];
+    tournStats['teams'].forEach(team => {
+        let teamStats = getStatsForTeam(team['privateKey']);
+        topTeams.push(teamStats);
+    });
+    //sort the teams by points
+    topTeams.sort((a,b) => (a.totalPoints > b.totalPoints) ? -1 : ((b.totalPoints > a.totalPoints) ? 1 : 0));
+    return topTeams.slice(0,n);
+}
+function getTopNPlayers(n){
+    topPlayers = [];
+    tournStats['players'].forEach(player => {
+        let playerStats = getStatsForPlayer(player['publicKey']);
+        topPlayers.push(playerStats);
+    });
+    //sort and slice the player Stats by points
+    topPlayers.sort((a,b) => (a.totalPoints > b.totalPoints) ? -1 : ((b.totalPoints > a.totalPoints) ? 1 : 0));
+    return topPlayers.slice(0,n);
+}

@@ -473,7 +473,7 @@ class Result(db.Model):
     #calculate the total points
     @property
     def totalPoints(self):
-        return 10 if self.tossup else 0 + 5 if self.bonus1 else 0 + 5 if self.bonus2 else 0
+        return 10 if self.tossupAnswer != "" else 0 + 5 if self.bonus1 else 0 + 5 if self.bonus2 else 0
     #serialize the result object by converting it to a dictionary; we do this so we can send it as a json object
     @property
     def serialize(self):

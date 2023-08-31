@@ -155,12 +155,12 @@ def on_liveQuestionUpdate(data):
         #set the stored question and answers to the live question and answer
         if questionType == 0:
             result.tossupAnswer = room.curLiveQuestionAnswer
-            result.curLiveQuestion = room.tossupQuestion
+            result.tossupQuestion = room.curLiveQuestion
         elif questionType == 1:
             result.bonus1Answer = room.curLiveQuestionAnswer
-            result.curLiveQuestion = room.bonus1Question
+            result.bonus1Question = room.curLiveQuestion
         elif questionType == 2:
-            result.curLiveQuestion = room.bonus2Question
+            result.bonus2Question = room.curLiveQuestion
             result.bonus2Answer = room.curLiveQuestionAnswer
         #set result's player and team answered values
         player = Player.getPlayer(list(filter(lambda x: x!="",room.getAttemptedPlayers()))[-1])

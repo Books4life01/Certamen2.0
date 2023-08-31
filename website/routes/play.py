@@ -1,6 +1,7 @@
 from flask import Blueprint, render_template, request, redirect, flash, url_for, get_flashed_messages
 from ..models import Player, Tournament, Room, Team
 from .. import db
+from .. import ip
 
 play = Blueprint('play', __name__)#passing the name of the blueprint and the name of the file
 
@@ -24,7 +25,7 @@ def tourn():
         flash("Invalid Player Key")
         return redirect(url_for('play.home'))
     else:
-        return render_template("client/liveTournClient.html", tournKey=tournPublicKey, player=player.serialize)#also pass in the room and tourn credentials
+        return render_template("client/liveTournClient.html", tournKey=tournPublicKey, player=player.serialize, ipaddress = ip)#also pass in the room and tourn credentials
 @play.route('/room')
 def room(): 
     #get room key
@@ -45,7 +46,7 @@ def room():
         return redirect(url_for('play.home'))
     else:
         db.session.commit()
-        return render_template("client/liveRoomClient.html", roomKey=roomKey, player=player.serialize)
+        return render_template("client/liveRoomClient.html", roomKey=roomKey, player=player.serialize, ipaddress = ip)
 #______________ INSTANTANEOUS ROUTE__________
 @play.route('/joinTourn')
 def joinTourn():
@@ -71,7 +72,7 @@ def joinTourn():
         #otherwise redirect to the tourn page
         else:
             tourn = Tournament.getTournByPrivate(player.superTournament)
-            return redirect(url_for('play.tourn', tournKey=tourn.publicKey, playerKey=playerPrivateKey, playerName=playerName))
+            return redirect(url_for('play.tourn', tournKey=tourn.publicKey, playerKey=playerPrivateKey, playerName=playerName, ipaddress = ip))
     else:
         # if tournament doesnt exist flash error and return a redirect back to the play page
         if tourn == None:
@@ -85,4 +86,4 @@ def joinTourn():
         #other wise create a player and redirect to the tourn page
         playerPrivateKey = tourn.createPlayer(playerName, team.privateKey)
         flash("Your player key is: " + str(playerPrivateKey) + " DO NOT LOSE THIS KEY!")
-        return redirect(url_for('play.tourn', tournKey=publicTournKey, playerKey=playerPrivateKey, playerName=playerName))
+        return redirect(url_for('play.tourn', tournKey=publicTournKey, playerKey=playerPrivateKey, playerName=playerName, ipaddress = ip))

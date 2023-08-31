@@ -2,6 +2,7 @@ from flask import Blueprint, render_template, request, redirect, flash, url_for
 from ..models import Player, Tournament, Room
 from . updateSocket import emitTournData
 from .. import db
+from .. import ip
 
 manage = Blueprint('manage', __name__)#passing the name of the blueprint and the name of the file
 
@@ -20,9 +21,9 @@ def tourn():
         #retrieve object and check if it is a live tournament
         isLive = tourn.liveTourn
         if isLive:
-            return render_template("host/liveTournHost.html", tournKey=tournPrivateKey)
+            return render_template("host/liveTournHost.html", tournKey=tournPrivateKey, ipaddress = ip)
         else:
-            return render_template("host/scoreTournHost.html", tournKey=tournPrivateKey)
+            return render_template("host/scoreTournHost.html", tournKey=tournPrivateKey, ipaddress = ip)
 @manage.route('/room')
 def room():
         roomPrivateKey = request.args.get('roomKey')
@@ -32,9 +33,9 @@ def room():
             return redirect(url_for('manage.home'))
         else:
             if room.isLiveRoom:
-                return render_template("host/liveRoomHost.html", roomKey=roomPrivateKey)
+                return render_template("host/liveRoomHost.html", roomKey=roomPrivateKey, ipaddress = ip)
             else:
-                return render_template("host/scoreRoomHost.html", roomKey=roomPrivateKey)
+                return render_template("host/scoreRoomHost.html", roomKey=roomPrivateKey, ipaddress = ip)
 
      
 
@@ -48,7 +49,7 @@ def createRoom():
     #creates a room and returns the room key
     tourn = Tournament.getTournByPrivate(tournPrivateKey)
     tourn.createRoom(roomName)
-    return redirect(url_for('manage.tourn', tournKey=tournPrivateKey))
+    return redirect(url_for('manage.tourn', tournKey=tournPrivateKey, ipaddress = ip))
 @manage.route('/tourn/team', methods=['POST'])
 def createTeam():
     #get the tournament key from the request
@@ -58,7 +59,7 @@ def createTeam():
     #creates a team and returns the team key
     tourn = Tournament.getTournByPrivate(tournPrivateKey)
     tourn.createTeam(name)
-    return redirect(url_for('manage.tourn', tournKey=tournPrivateKey))
+    return redirect(url_for('manage.tourn', tournKey=tournPrivateKey, ipaddress = ip))
 #delete routes
 @manage.route('/tourn', methods=['DELETE'])
 def deleteTourn():
@@ -85,7 +86,7 @@ def authenticateToutn():
     tournPrivateKey = request.args.get('tournKey')#Retrieve Tournament Key from request
 
     if Tournament.getTournByPrivate(tournPrivateKey):
-        return redirect(url_for('manage.tourn', tournKey=tournPrivateKey))
+        return redirect(url_for('manage.tourn', tournKey=tournPrivateKey, ipaddress = ip))
     else:
         flash("Invalid Tournament Key")
         return redirect(url_for('manage.home'))

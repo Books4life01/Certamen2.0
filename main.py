@@ -1,6 +1,7 @@
-from website import create_app, createSocketServer
+from website import create_app, createSocketServer, ip
 import socket
 import os
+
 
 app = create_app()
 socketio = createSocketServer(app)
@@ -17,5 +18,6 @@ def add_header(response):
 if __name__ == "__main__":
     # os.environ['PYTHONDONTWRITEBYTECODE'] = '0'
     # os.system("python -m compileall -b -f -o ./__pycache__ ./")
-    print("Starting server... on " + socket.gethostbyname(socket.gethostname()) + ":8080")
-    socketio.run(app, debug=True, host=socket.gethostbyname(socket.gethostname()), port=8080)
+    print("Current Host: " + socket.gethostbyname(socket.gethostname()))
+    print("Starting server... on " + ip)
+    socketio.run(app, debug=True, host=(ip.replace("http://", "").replace(":8080", "")), port=8080)

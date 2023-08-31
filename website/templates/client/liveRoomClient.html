@@ -10,7 +10,7 @@
     let player = {{ player|tojson}};
     let results = [];
     let roomData = {};
-    const socket = io.connect('http://192.168.4.127:8080');
+    const socket = io.connect("{{ipaddress}}");
 
     //Document Ready
     $(document).ready(() => {

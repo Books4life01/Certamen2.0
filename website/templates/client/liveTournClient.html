@@ -1,6 +1,6 @@
 {%extends "home/base.html"%}
 {%block script%}<script>
-    const socket = io.connect('http://192.168.4.127:8080');
+    const socket = io.connect("{{ipaddress}}");
     let tournData = {};
     socket.on('connect', function(){
         socket.emit('tournDataRefreshRequest', data = {"tournKey": {{ tournKey|tojson }}});

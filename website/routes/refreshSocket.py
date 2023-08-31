@@ -64,6 +64,7 @@ def emitRoomData(roomKey, brdcst):
     room = Room.getRoom(roomKey)
     emit('roomDataUpdate', room.serialize, broadcast=brdcst, include_self=True)
     emit('roomParticipantUpdate', {"privateKey":room.privateKey,"publicKey":room.publicKey, "participants":json.dumps(list(map(lambda client: {"playerKey":client['playerKey'], "teamKey":Player.getPlayer(client["playerKey"]).superTeam, "name":Player.getPlayer(client['playerKey']).name},liveRoomClients[room.publicKey]["clients"])))if room.publicKey in liveRoomClients else []}, broadcast=brdcst, include_self=True)
+    emitTournData(room.superTournament, brdcst)
 def emitTournData(tournKey, brdcst):
     tourn = Tournament.getTourn(tournKey)
     emit('tournDataUpdate', tourn.serialize, broadcast=brdcst)

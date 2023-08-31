@@ -2,7 +2,7 @@
 {%block title%}Score TournamentHost{%endblock%}
 {%block script%}<script>
     //set up client socket
-    const socket = io.connect('http://192.168.4.127:8080');
+    const socket = io.connect("{{ipaddress}}");
     socket.on("connect", () => {
         console.log("connected");
         //Reqeust Data Refresh from the server
@@ -10,6 +10,9 @@
             "tournKey": {{ tournKey|tojson }}
         });
     });
+    
+
+
     //Receive Tournament Data from the server
     socket.on("roomsUpdate", (data) => {
         //Ensure that the tournament we are looking at is the same as the one we are recieving data for
@@ -92,7 +95,9 @@
     
 
 
-</script>{%endblock%}
+</script>
+<script src="{{ url_for('static', filename='script/tournStatScript.js') }}"></script>
+{%endblock%}
 {%block styles%}<style>
 .btn-primary{
     background-color: var(--primary-color);

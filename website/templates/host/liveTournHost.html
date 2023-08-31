@@ -2,7 +2,7 @@
 {%block title%}Live TournamentHost{%endblock%}
 {%block script%}<script>
     //set up client socket
-    const socket = io.connect('http://192.168.4.127:8080');
+    const socket = io.connect("{{ipaddress}}");
     let tournKey = {{ tournKey|tojson }};
     console.log(tournKey);
     let tourn = null;
@@ -112,7 +112,6 @@
         $("#showStatistics").click(()=>{
             reloadTournStatistics();
             $("#tournamentStatistics").modal("show");
-            $("")
         })
         $('#deleteRoom').click(() =>{
             //show warning modal
@@ -138,8 +137,12 @@
 
 
     function reloadTournStatistics(){}
-</script>{%endblock%}
-{%block styles%}<style>
+</script>
+<script src="{{ url_for('static', filename='script/tournStatScript.js') }}"></script>
+{%endblock%}
+{%block styles%}
+<link rel="stylesheet" href="{{ url_for('static', filename='style/tournStatStyle.css') }}">
+<style>
     .btn-primary{
         background-color: var(--primary-color);
         margin: 2%;
@@ -245,73 +248,7 @@
     }
 
 
-    #tournamentStatistics>.modal-dialog{
-        width:80%;
-        height:100%;
-        margin: 20% 10% 20% 10%;
-        max-width:none;
-    }
-    #tournamentStatistics>*>.modal-content{
-        height:100%;
-    }
-    #tournamentStatistics>*>*>*{
-        height:5%;
-    }
-    #tournamentStatistics>*>*>.modal-body{
-        height:50%;
-        width:100%;
-        padding:0 0 0 0;
-        position:relative;
-    }
-    .statBorder{
-        border: dotted green 1px; 
-    }
-    #playerLeaderBoard{
-        position:absolute;
-        width:90%;
-        margin-left:5%;
-        height:20%;
-        margin-top:75%;
-        text-align: center;
-    }
-    .horizantalInfiniteTextWrapper{
-        display:flex;
-        justify-content:space-between;
-        align-items: center;
-        overflow:hidden;
-        height:80%;
-    }
     
-    #TopTeamsLabel{
-        height:20%;
-        margin-top:0%;
-    }
-    .playerScore{
-        animation: move-rtl 5s linear infinite;
-        white-space:nowrap;
-
-    }
-    .teamScore{
-        animation: move-ttb 6000ms linear infinite;
-        white-space: nowrap;
-    }
-    #teamLeaderBoard{
-        position: absolute;
-        width:40%;
-        margin-left:59%;
-        height:77%;
-        margin-top:1%;
-    }
-    .verticalInfiniteTextWrapper{
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        justify-content: start;
-        overflow:hidden;
-        height:80%;
-        margin-top:20%;
-        border: white dotted 1px;
-    }
     @keyframes move-rtl{
         0%{
             transform:translateX(0%);
@@ -413,41 +350,17 @@
             <div class="modal-body">
                 <div class="statBorder" id="playerLeaderBoard">
                     <!-- Top PLayers by Points -->
-                    <h1 id="TopTeamsLabel">Top Players</h1>
+                    <h1 id="TopPlayersLabel">Top Players</h1>
                     <div class="horizantalInfiniteTextWrapper">
-                        <h3 class="playerScore">PLayer #1 10pts</h3>
-                        <h3 class="playerScore">PLayer #1 10pts</h3>
-
-                        <h3 class="playerScore">PLayer #1 10pts</h3>
-
-                        <h3 class="playerScore">PLayer #1 10pts</h3>
-                        <h3 class="playerScore">PLayer #1 10pts</h3>
-                        <h3 class="playerScore">PLayer #1 10pts</h3>
-
-                        <h3 class="playerScore">PLayer #1 10pts</h3>
-
-                        <h3 class="playerScore">PLayer #1 10pts</h3>
-                        <h3 class="playerScore">PLayer #1 10pts</h3>
-                        <h3 class="playerScore">PLayer #1 10pts</h3>
-
-                        <h3 class="playerScore">PLayer #1 10pts</h3>
-
-                        <h3 class="playerScore">PLayer #1 10pts</h3>
+                       <div class="horizantalMover first"></div>
+                       <div class="horizantalMover last"></div>
                     </div>
                 </div>
                 <div class="statBorder" id="teamLeaderBoard">
                     <!-- List all the teams by WLT and Points -->
                     <div class="verticalInfiniteTextWrapper">
-                        <h3 class="teamScore">Team #1 10pts</h3>
-                        <h3 class="teamScore">Team #1 10pts</h3>
-
-                        <h3 class="teamScore">Team #1 10pts</h3>
-                        <h3 class="teamScore">Team #1 10pts</h3>
-                        <h3 class="teamScore">Team #1 10pts</h3>
-                        <h3 class="teamScore">Team #1 10pts</h3>
-                        <h3 class="teamScore">Team #1 10pts</h3>
-
-                        <h3 class="teamScore">Team #1 10pts</h3>
+                        <div class="verticalMover first"></div>
+                       <div class="verticalMover last"></div>
                     </div>
 
                 </div>

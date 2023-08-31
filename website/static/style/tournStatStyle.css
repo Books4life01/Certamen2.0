@@ -1,0 +1,110 @@
+#tournamentStatistics>.modal-dialog{
+    width:80%;
+    height:100%;
+    margin: 20% 10% 20% 10%;
+    max-width:none;
+}
+#tournamentStatistics>*>.modal-content{
+    height:100%;
+}
+#tournamentStatistics>*>*>*{
+    height:5%;
+}
+#tournamentStatistics>*>*>.modal-body{
+    height:50%;
+    width:100%;
+    padding:0 0 0 0;
+    position:relative;
+}
+.statBorder{
+    border: dotted green 1px; 
+}
+#playerLeaderBoard{
+    position:absolute;
+    width:100%;
+    height:30%;
+    top:70%;
+    text-align: center;
+}
+#teamLeaderBoard{
+    position: absolute;
+    width:40%;
+    left:59%;
+    height:68%;
+    top:1%;
+}
+.horizantalInfiniteTextWrapper{
+   width:100%;
+   height: 80%;
+   position:absolute;
+    top:20%;
+    
+    display:flex;
+    align-items: center;
+}
+
+.horizantalMover{
+    display: flex;
+    align-items: center;
+    justify-content:space-evenly;
+
+    width:100%;
+    position:absolute;
+    right:100%;
+    border: blue dotted 1px;
+
+    animation: ltr linear infinite ;
+}
+.first{
+    z-index:1;
+}
+.last{
+    z-index:2;
+}
+
+
+#TopTeamsLabel{
+    height:20%;
+    margin-top:0%;
+}
+
+
+.verticalInfiniteTextWrapper{
+    width:100%;
+    height: 100%;
+    position:absolute;
+     
+     display:flex;
+     flex-direction:column;
+     align-items: center;
+}
+.verticalMover{
+    display: flex;
+    flex-direction:column;
+    align-items: center;
+    justify-content:space-evenly;
+
+    height:100%;
+    position:absolute;
+    bottom:100%;
+    border: blue dotted 1px;
+
+    animation: ttb linear infinite ;
+}
+
+@keyframes ltr{
+    0%{
+      transform: translate(-100%, 0);
+    }
+    100%{
+      transform: translate(200%, 0);
+    }
+}
+@keyframes ttb{
+    0%{
+      transform: translate(0, -100%);
+    }
+    100%{
+      transform: translate(0, 200%);
+    }
+}

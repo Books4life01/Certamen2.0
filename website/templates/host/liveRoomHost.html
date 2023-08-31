@@ -2,13 +2,11 @@
 {%block title%}LiveRoomHost{%endblock%}
 
 {%block script%}
-<script src="{{ url_for('static', filename='script/dragdrop.js') }}"></script>
-<script src="{{ url_for('static', filename='script/roomHostBaseCode.js') }}"></script>
-<script src="{{ url_for('static', filename='script/liveQuestion.js') }}"></script>
 <script>
     //Template Specific Variables
     let roomKey = {{ roomKey|tojson }};
     let player = undefined;
+    const socket = io.connect("{{ipaddress}}");
 
     //template Specific Socket Handlers -> socket variables defined in roomHostBaseCode.js
     socket.on('connect', function(){
@@ -239,7 +237,11 @@
         }
 
     }
-</script>{%endblock%}
+</script>
+<script src="{{ url_for('static', filename='script/dragdrop.js') }}"></script>
+<script src="{{ url_for('static', filename='script/roomHostBaseCode.js') }}"></script>
+<script src="{{ url_for('static', filename='script/liveQuestion.js') }}"></script>
+{%endblock%}
 {%block styles%}<style>
     .input-group{
         text-align: center;
