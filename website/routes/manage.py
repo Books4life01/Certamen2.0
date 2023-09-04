@@ -1,5 +1,5 @@
 from flask import Blueprint, render_template, request, redirect, flash, url_for
-from ..models import Player, Tournament, Room
+from ..models import Player, Tournament, Room, Team
 from . updateSocket import emitTournData
 from .. import db
 from .. import ip
@@ -37,6 +37,7 @@ def room():
             else:
                 return render_template("host/scoreRoomHost.html", roomKey=roomPrivateKey, ipaddress = ip)
 
+
      
 
 #post routes
@@ -60,6 +61,18 @@ def createTeam():
     tourn = Tournament.getTournByPrivate(tournPrivateKey)
     tourn.createTeam(name)
     return redirect(url_for('manage.tourn', tournKey=tournPrivateKey, ipaddress = ip))
+@manage.route('/tourn/player', methods=['POST'])
+def createPlayer():
+    #get the tournament key from the request
+    tournPrivateKey = request.form['tournKey']
+    #get the team name from the request
+    name = request.form['name']
+    #superTeam
+    superTeam = request.form['teamKey']
+    #creates a team and returns the team key
+    tourn = Tournament.getTournByPrivate(tournPrivateKey)
+    tourn.createPlayer(name, superTeam)
+    return redirect(url_for('manage.tourn', tournKey=tournPrivateKey, ipaddress = ip))
 #delete routes
 @manage.route('/tourn', methods=['DELETE'])
 def deleteTourn():
@@ -72,6 +85,18 @@ def deleteRoom():
     roomPrivateKey = request.args.get('roomKey')
     room = Room.getRoomByPrivate(roomPrivateKey)
     room.delete()
+    return ""
+@manage.route('/team', methods=['DELETE'])
+def deleteTeam():
+    teamPrivateKey = request.args.get('teamKey')
+    team = Team.getTeamByPrivate(teamPrivateKey)
+    team.delete()
+    return ""
+@manage.route('/player', methods=['DELETE'])
+def deletePlayer():
+    playerPrivateKey = request.args.get('playerKey')
+    player = Player.getPlayer(playerPrivateKey)
+    player.delete()
     return ""
 
     

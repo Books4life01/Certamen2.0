@@ -24,6 +24,10 @@ class Player(db.Model):
             'superTeam': self.superTeam
         }
 
+
+    def delete(self):
+        db.session.delete(self)
+        db.session.commit()
     #see if a player exsists by its key either public or private
     @staticmethod
     def exists(publicKey):
@@ -401,6 +405,10 @@ class Team(db.Model):
             'player3': self.player3,
             'player4': self.player4
         }
+    
+    def delete(self):
+        db.session.delete(self)
+        db.session.commit()
 
     #STATIC FUNCTIONS
     #see if a team exsists

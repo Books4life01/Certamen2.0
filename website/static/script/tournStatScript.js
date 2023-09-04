@@ -25,6 +25,32 @@ socket.on('tournStatData', function(data){
         $(".verticalMover.last").css("animation-duration", 16*topTeams.length + "s");
         $(".verticalMover.last").css("animation-delay", 8*topTeams.length + "s");
 
+
+        $("#tournStatsLabel").text(tourn["name"]);
+
+        //General Data
+        $("#roomNumber").text("Rooms: " + tournStats['rooms'].length);
+        $("#playerNumber").text("Players: " + tournStats['players'].length);
+        $("#teamNumber").text("Teams: " + tournStats['teams'].length);
+
+        //List Rooms
+        tournStats['rooms'].forEach(room => {
+            let roomStatData = $("<div class='roomStatData'></div>");
+            roomStatData.append($("<div class='roomName'></div>").text("Name: " + room['data']['name']));
+            ['A', 'B', 'C', 'D'].forEach((letter) => {
+                let key = "team" + letter;
+                let teamKey = room['data'][key];
+                if(teamKey != ""){
+                    
+                    let team = tournStats['teams'].find(tournTeam => tournTeam['privateKey'] == teamKey);
+                    console.log(team)
+                    roomStatData.append($("<div class='roomTeam'></div>").text("Team: " + team['name'])); 
+                }
+            });
+            //roomStatData.append($("<div class='roomPlayers'></div>").text("Players: " + room['data']['players'].length));
+        });
+
+
     
     
 

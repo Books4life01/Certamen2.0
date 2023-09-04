@@ -29,9 +29,16 @@
 #teamLeaderBoard{
     position: absolute;
     width:40%;
-    left:59%;
+    left:60%;
     height:68%;
     top:1%;
+}
+#tournStats{
+    position: absolute;
+    width:60%;
+    height:68%;
+    top:1%;
+    border: 1px green dotted;
 }
 .horizantalInfiniteTextWrapper{
    width:100%;
@@ -71,7 +78,8 @@
 
 .verticalInfiniteTextWrapper{
     width:100%;
-    height: 100%;
+    height: 80%;
+    top:20%;
     position:absolute;
      
      display:flex;
@@ -82,7 +90,7 @@
     display: flex;
     flex-direction:column;
     align-items: center;
-    justify-content:space-evenly;
+    justify-content:center;
 
     height:100%;
     position:absolute;

@@ -18,21 +18,67 @@
         if(data.privateKey == tournKey || data.publicKey == tournKey){
             tourn = data;
             $("#tournLabel").text("LIVE TOURN Private: " + tourn.privateKey + "Public:" + tourn.publicKey);
-        }
-    });
-    socket.on("tournStatData", (data)=>{
-        statData = data;
-    })
-    //Receive Tournament Data from the server
-    socket.on("tournRoomsUpdate", (data) => {
-        //Ensure that the tournament we are looking at is the same as the one we are recieving data for
-        if (data.tournKey == {{ tournKey|tojson }}){
+            
+            //update the player team selector
+            $("#playerTeamSelector").empty();
+            tourn.teams.forEach((team)=>{
+                let teamOption = $("<option></option>").text(team.name).attr("value", team.privateKey);
+                $("#playerTeamSelector").append(teamOption);
+            });
 
+            $("#playerContainer").empty()
+            $("#playerContainer").append($("<div class='team'><h6>Player Name</h6><h6>Team</h6><h6>Private Key</h6><h6>Public Key</h6></div>"));
+            //Update the Players container
+            tourn.players.forEach(player =>{
+                let playerDiv = $("<div class='player'></div>");
+                let playerName = $("<h4></h4>").text(player.name);
+               let playerTeam = $("<h4></h4>").text(tourn.teams.find(team => team.privateKey == player.superTeam)['name']);
+                let playerPrivateKey = $("<h4></h4>").text(player.privateKey);
+                let playerPublicKey = $("<h4></h4>").text(player.publicKey);
+                let playerDeleteBtn = $('<i class="fa-solid fa-trash" id="deletePlayer' + player.privateKey + '" data-toggle="tooltip" data-placement="top" title="Delete this Player"></i>').click(() => {
+                    //show warning modal
+                    $("#deletePlayerWarning").modal("show");
+                    $("#deletePlayerFinal").click(() => {
+                        fetch("/host/manage/player?playerKey=" + player.privateKey, {
+                            method: "DELETE"
+                        })
+                        .then((res) => {
+                            if (res.status == 200) {
+                                window.location.href = "/host/manage/tourn?tournKey={{tournKey}}";
+                            }
+                        });
+                    });
+                });
+                playerDiv.append(playerName);
+                playerDiv.append(playerTeam);
+                playerDiv.append(playerPublicKey);
+                playerDiv.append(playerPrivateKey);
+
+                playerDiv.append(playerDeleteBtn);
+                $("#playerContainer").append(playerDiv);
+            })
+            //update teams div
+            $("#teamsContainer").empty()
+            $("#teamsContainer").append($("<div class='team'><h6>Team Name</h6><h6>Manage Team</h6><h6>Private Key</h6><h6>Public Key</h6></div>"));
+            tourn.teams.forEach((team) => {
+                let teamDiv = $("<div class='team'></div>");
+                let teamName = $("<h4></h4>").text(team.name);
+                let manageTeamBtn = $("<button class='btn btn-primary'></button>").text("Manage Team");
+                let teamPrivateKey = $("<h4></h4>").text(team.privateKey);
+                let teamPublicKey = $("<h4></h4>").text(team.publicKey);
+
+                teamDiv.append(teamName);
+                teamDiv.append(manageTeamBtn);
+                teamDiv.append(teamPrivateKey);
+                teamDiv.append(teamPublicKey);
+                $("#teamsContainer").append(teamDiv);
+
+            });
+            //update players div
             $("#roomsContainer").empty();
             var labelRoomDiv = $("<div class='room'><h6>Room Name</h6><h6>Join Room</h6><h6>Public Key</h6><h6>Private Key</h6><h6>Status</h6><h6>Delete</h6></div>")
             $("#roomsContainer").append(labelRoomDiv);
-            data.rooms.forEach((room) => {
-                console.log(room);
+            tourn.rooms.forEach((room) => {
                 let roomDiv = $("<div class='room'></div>");
                 let roomName = $("<h4></h4>").text(room.name);
                 let manageRoomBtn = $("<button class='btn btn-primary editRoom' ></button>").text("Manage Room");
@@ -66,33 +112,13 @@
 
             });
         }
-
     });
+    socket.on("tournStatData", (data)=>{
+        statData = data;
+    })
+    
 
-    socket.on("tournTeamsUpdate", (data) => {
-        //Ensure that the tournament we are looking at is the same as the one we are recieving data for
-        if (data.tournKey == {{ tournKey|tojson }}){
-        
-            $("#teamsContainer").empty()
-            $("#teamsContainer").append($("<div class='team'><h6>Team Name</h6><h6>Manage Team</h6><h6>Private Key</h6><h6>Public Key</h6></div>"));
-            data.teams.forEach((team) => {
-                console.log(team);
-                let teamDiv = $("<div class='team'></div>");
-                let teamName = $("<h4></h4>").text(team.name);
-                let manageTeamBtn = $("<button class='btn btn-primary'></button>").text("Manage Team");
-                let teamPrivateKey = $("<h4></h4>").text(team.privateKey);
-                let teamPublicKey = $("<h4></h4>").text(team.publicKey);
-
-                teamDiv.append(teamName);
-                teamDiv.append(manageTeamBtn);
-                teamDiv.append(teamPrivateKey);
-                teamDiv.append(teamPublicKey);
-                $("#teamsContainer").append(teamDiv);
-
-            });
-            console.log(data);
-        }
-    });
+    
     socket.on("disconnect", () => {
         console.log("disconnected from server");
     });
@@ -199,18 +225,18 @@
         overflow-y: scroll;
         border: 1px solid blue;
     }
-    .overflow-container::-webkit-scrollbar, .room>*::-webkit-scrollbar, .team>*::-webkit-scrollbar{
+    .overflow-container::-webkit-scrollbar, .room>*::-webkit-scrollbar, .team>*::-webkit-scrollbar, .player>*::-webkit-scrollbar{
         width: 10px;
       display: none;
     }
-    .room, .team{
+    .room, .team, .player{
         justify-content: center;
         display: flex;
         flex-wrap: nowrap;
         gap: 5%;
     
     }
-    .room>*, .team>*{
+    .room>*, .team>*, .player>*{
         display: inline-block;
         color:black;
         margin-left: 1%;
@@ -227,7 +253,7 @@
         overflow: auto;
     }
     
-    #roomsContainer, #teamsContainer{
+    #roomsContainer, #teamsContainer, #playerContainer{
        background-color: var(--secondary-color);
        border-radius: 25px;
        width: 90%;
@@ -240,6 +266,7 @@
     
     i{
         padding:1%;
+        color:var(--primary-color)
     }
     #actionBar{
         display:flex;
@@ -281,6 +308,12 @@
     <h1 class="center">Teams:</h1>
     <div id="teamsContainer" class="overflow-container center">
         <div class="team" ><h6>Team Name</h6><h6>Edit Team</h6><h6>Private Key</h6><h6>Public Key</h6></div>
+    </div>
+</div>
+<div class="center" id="playersInfo">
+    <h1 class="center">Players:</h1>
+    <div id="playerContainer" class="overflow-container center">
+        <div class="team" ><h6>Player Name</h6><h6>Team</h6><h6>Private Key</h6><h6>Public Key</h6></div>
     </div>
 </div>
 <div class="modal fade" tabindex="-1" id="addRoomModal">
@@ -327,6 +360,13 @@
                             <input type="hidden" name="tournKey" value="{{tournKey}}">
                             <label for="playerNameInput">Enter Player Name:</label>
                             <input type="text" name="name" id="playerNameInput" placeholder="....">
+                            <br>
+                            <label for="playerTeamSelector">Enter Player Team</label>
+            
+                            <select id="playerTeamSelector" name="teamKey">
+                            
+                            </select>
+                            <br>
                             <input type="submit" value="Create Player">
 
                         </form>
@@ -358,6 +398,7 @@
                 </div>
                 <div class="statBorder" id="teamLeaderBoard">
                     <!-- List all the teams by WLT and Points -->
+                    <h1 id="TopTeamsLabel" class="center">Top Teams</h1>
                     <div class="verticalInfiniteTextWrapper">
                         <div class="verticalMover first"></div>
                        <div class="verticalMover last"></div>
@@ -365,7 +406,15 @@
 
                 </div>
                 <div class="statBorder" id="tournStats">
+                    <h1 id="tournStatsLabel" class="center"></h1>
+                    <hr>    
+                    <div id="roomNumber" class="center"></div>
+                    <div id ="playerNumber" class="center"></div>
+                    <div id ="teamNumber" class="center"></div>
+                    <div id="livePlayerNumber" class="center"></div>                
+
                     <!-- Live Players -->
+
                     <!-- Total Players and Teams -->
                     <!-- Total Rooms and Live Rooms -->
                 </div>
@@ -410,9 +459,25 @@
         </div>
     </div>
 </div>
+<!-- Delete Room Dialog -->
+<div class="modal fade" tabindex="-1" id="deletePlayerWarning">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content warning-content modal-hexagon center">
+            <div class="modal-header"></div>
+            <div class="modal-body warning-body">
+                <h1>Are you sure you want to delete this Player?</h1>
+                <h6>This action cannot be undone</h3>
+                
+                <i class="fa-solid fa-trash fa-2xl" id="deletePlayerFinal"style="color: #ffffff; margin-top:15%; font-size:8em;"></i>
+
+            </div>
+            <div class="modal-footer"></div>
+        </div>
+    </div>
+</div>
 
 
-<nav class="navbar fixed-bottom">
+<nav class="navbar ">
     <div class="container-fluid" id="actionBar">
         <i class="fa-solid fa-plus fa-2xl" id="addItem" data-toggle="tooltip" data-placement="top" title="Create new Room or Tournament"></i>
         <i class="fa-solid fa-trash" id="deleteTourn" data-toggle="tooltip" data-placement="top" title="Delete this Tournament"></i>

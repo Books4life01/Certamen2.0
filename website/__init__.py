@@ -15,8 +15,10 @@ liveRoomClients = {}
 
 #ip address the server wil be running on so some of the html pages know what socket to onconnect to 
 #ip = "http://10.20.2.222:8080"
-ip = "http://192.168.4.127:8080"
+#ip = "http://192.168.4.127:8080"
+ip = "http://192.168.4.245:8080"
 #172.16.65.246
+#192.168.4.245
 
 
 def create_app():

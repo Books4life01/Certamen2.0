@@ -11,10 +11,7 @@ def on_tournDataRefreshRequest( message, brdcst=False):
     tourn = Tournament.getTourn(tournKey)
     if tourn != None:
         emitTournData(tournKey, brdcst)
-        #send all the rooms from the tournament to the client
-        emitTournRooms(tournKey, brdcst)
-        #send all the teams from the tournament to the client
-        emitTournTeams(tournKey, brdcst)
+       
     else:
         #do something
         emit("ERROR", "Tournament not found upon tournDataRefreshRequest")
