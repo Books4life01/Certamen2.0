@@ -1,5 +1,12 @@
 {%extends "home/base.html"%}
-{%block title%}Live TournamentHost{%endblock%}
+{% block title %}
+    {% if isLive %}
+        Live Tournament
+    {% else %}
+        Tournament Scoreboard
+    {% endif %}
+{% endblock %}
+
 {%block script%}<script>
     //set up client socket
     const socket = io.connect("{{ipaddress}}");
@@ -17,8 +24,9 @@
     socket.on("tournDataUpdate", (data) => {
         if(data.privateKey == tournKey || data.publicKey == tournKey){
             tourn = data;
-            $("#tournLabel").text("LIVE TOURN Private: " + tourn.privateKey + "Public:" + tourn.publicKey);
             
+            if(tourn.liveTourn)$("#tournLabel").text("LIVE TOURN Private: " + tourn.privateKey + "Public:" + tourn.publicKey);
+            else $("#tournLabel").text("SCOREBOARD TOURN Private: " + tourn.privateKey + "Public:" + tourn.publicKey);
             //update the player team selector
             $("#playerTeamSelector").empty();
             tourn.teams.forEach((team)=>{
@@ -27,7 +35,7 @@
             });
 
             $("#playerContainer").empty()
-            $("#playerContainer").append($("<div class='team'><h6>Player Name</h6><h6>Team</h6><h6>Private Key</h6><h6>Public Key</h6></div>"));
+            $("#playerContainer").append($("<div class='team'><h6>Player Name</h6><h6>Team</h6><h6>Private Key</h6><h6>Public Key</h6><h6>Delete</h6></div>"));
             //Update the Players container
             tourn.players.forEach(player =>{
                 let playerDiv = $("<div class='player'></div>");
@@ -59,24 +67,41 @@
             })
             //update teams div
             $("#teamsContainer").empty()
-            $("#teamsContainer").append($("<div class='team'><h6>Team Name</h6><h6>Manage Team</h6><h6>Private Key</h6><h6>Public Key</h6></div>"));
+            $("#teamsContainer").append($("<div class='team'><h6>Team Name</h6><h6>Manage Team</h6><h6>Private Key</h6><h6>Public Key</h6><h6>Delete</h6></div>"));
             tourn.teams.forEach((team) => {
                 let teamDiv = $("<div class='team'></div>");
                 let teamName = $("<h4></h4>").text(team.name);
                 let manageTeamBtn = $("<button class='btn btn-primary'></button>").text("Manage Team");
+                manageTeamBtn.click(() => {
+                    window.location.href = "/host/manage/team?teamKey=" + team.privateKey;
+                    });
                 let teamPrivateKey = $("<h4></h4>").text(team.privateKey);
                 let teamPublicKey = $("<h4></h4>").text(team.publicKey);
 
+                let teamDeleteBtn = $('<i class="fa-solid fa-trash" id="deleteTeam' + team.privateKey + '" data-toggle="tooltip" data-placement="top" title="Delete this Team"></i>').click(() => {
+                    $("#deleteTeamWarning").modal("show");
+                    $("#deleteTeamFinal").click(() => {
+                        fetch("/host/manage/team?teamKey=" + team.privateKey, {
+                            method: "DELETE"
+                        })
+                        .then((res) => {
+                            if (res.status == 200) {
+                                window.location.href = "/host/manage/tourn?tournKey={{tournKey}}";
+                            }
+                        });
+                    });
+                });
                 teamDiv.append(teamName);
                 teamDiv.append(manageTeamBtn);
                 teamDiv.append(teamPrivateKey);
                 teamDiv.append(teamPublicKey);
+                teamDiv.append(teamDeleteBtn);
                 $("#teamsContainer").append(teamDiv);
 
             });
             //update players div
             $("#roomsContainer").empty();
-            var labelRoomDiv = $("<div class='room'><h6>Room Name</h6><h6>Join Room</h6><h6>Public Key</h6><h6>Private Key</h6><h6>Status</h6><h6>Delete</h6></div>")
+            var labelRoomDiv = $("<div class='room'><h6>Room Name</h6><h6>Join Room</h6><h6>Public Key</h6><h6>Private Key</h6>" + (tourn.liveTourn?"<h6>Status</h6>":"") + "<h6>Delete</h6></div>")
             $("#roomsContainer").append(labelRoomDiv);
             tourn.rooms.forEach((room) => {
                 let roomDiv = $("<div class='room'></div>");
@@ -106,7 +131,7 @@
                 roomDiv.append(roomPublicKey);
                 roomDiv.append(roomPrivateKey);
 
-                roomDiv.append($("<h4></h4>").text(room.isLive ? "Live" : "Not Live"));
+                if(tourn.liveTourn)roomDiv.append($("<h4></h4>").text(room.isLive ? "Live" : "Not Live"));
                 roomDiv.append(roomDeleteBtn);
                 $("#roomsContainer").append(roomDiv);
 
@@ -475,11 +500,27 @@
         </div>
     </div>
 </div>
+<!-- Delete Room Dialog -->
+<div class="modal fade" tabindex="-1" id="deleteTeamWarning">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content warning-content modal-hexagon center">
+            <div class="modal-header"></div>
+            <div class="modal-body warning-body">
+                <h1>Are you sure you want to delete this Team?</h1>
+                <h6>This action cannot be undone</h3>
+                
+                <i class="fa-solid fa-trash fa-2xl" id="deleteTeamFinal"style="color: #ffffff; margin-top:15%; font-size:8em;"></i>
+
+            </div>
+            <div class="modal-footer"></div>
+        </div>
+    </div>
+</div>
 
 
 <nav class="navbar ">
     <div class="container-fluid" id="actionBar">
-        <i class="fa-solid fa-plus fa-2xl" id="addItem" data-toggle="tooltip" data-placement="top" title="Create new Room or Tournament"></i>
+        <i class="fa-solid fa-plus fa-2xl" id="addItem" data-toggle="tooltip" data-placement="top" title="Create new Room, Team, or Player"></i>
         <i class="fa-solid fa-trash" id="deleteTourn" data-toggle="tooltip" data-placement="top" title="Delete this Tournament"></i>
         <i class="fa-solid fa-chart-simple" id="showStatistics" data-toggle="tooltip" data-placement="top" title="Show Tournament Statistics"></i>
     </div>

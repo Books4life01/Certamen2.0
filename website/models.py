@@ -228,10 +228,12 @@ class Room(db.Model):
 
     #return the selectedTeams in the room
     def getTeams(self):
-        return [self.teamA, self.teamB, self.teamC, self.teamD]
+        return [Team.getTeamByPrivate(self.teamA).serialize if self.teamA != "" else {"privateKey":""}, Team.getTeamByPrivate(self.teamB).serialize if self.teamB != "" else {"privateKey":""}, Team.getTeamByPrivate(self.teamC).serialize if self.teamC != "" else {"privateKey":""}, Team.getTeamByPrivate(self.teamD).serialize if self.teamD != "" else {"privateKey":""}]
     #get Results in the room
     def getResults(self):
         return [result.serialize for result in self.results]
+    def getRooms(self):
+        return [room.serialize for room in self.rooms]
     def addResult(self, teamAnsweredKey, playerAnsweredKey, questionNumber, tossupAchieved, bonus1Achieved, bonus2Achieved, tossupQuestion="None", bonus1Question="None", bonus2Question="None"):
         result = Result(teamAnsweredKey=teamAnsweredKey, playerAnsweredKey=playerAnsweredKey, questionNumber=questionNumber, tossup=tossupAchieved, bonus1=bonus1Achieved, bonus2=bonus2Achieved, tossupQuestion=tossupQuestion, bonus1Question=bonus1Question, bonus2Question=bonus2Question, superRoom = self.publicKey)
         db.session.add(result)

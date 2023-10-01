@@ -32,6 +32,15 @@ def on_roomDataRefreshRequest(message, brdcst=False):
        
     else:
         emit("ERROR", "Room not found upon roomDataRefreshRequest")
+def on_teamDataRefreshRequest(message, brdcst=False):
+    #retrieve teamKey from request either public or private
+    teamKey = message["teamKey"]
+    team = Team.getTeamByPrivate(teamKey)
+    if team != None:
+        #emit team specific data
+        emitTeamData(teamKey, brdcst)
+    else:
+        emit("ERROR", "Team not found upon teamDataRefreshRequest")
 #HELPER
 def emitRoomResults(roomKey, brdcst):
     room = Room.getRoom(roomKey)
@@ -52,6 +61,7 @@ def emitRoomSelectedTeams(roomKey, brdcst):
         room = Room.getRoom(roomKey)
         roomTeams = room.getTeams()
         emit('roomTeamsUpdate', {"roomKey":roomKey, "teams":roomTeams}, broadcast=brdcst)
+        
 def emitTournRooms(tournKey, brdcst):
     tourn = Tournament.getTourn(tournKey)
     #retrieve list of rooms(list of objects) from tournament object
@@ -78,4 +88,7 @@ def emitRoomLiveQuestionUpdate(roomKey, actionType, brdcst, player="None", extra
     room = Room.getRoom(roomKey)
     roomData = room.serialize
     emit('roomLiveQuestionUpdate', {"privateKey":room.privateKey,"publicKey":room.publicKey, "curLiveQuestion":roomData["curLiveQuestion"], "curLiveQuestionAnswer":roomData["curLiveQuestionAnswer"], "liveQuestionPaused":roomData["timer"]>0, "curQuestionType":roomData["curQuestionType"], "curQuestion":roomData["curQuestionNumber"], "playersAttempted":roomData["playersAttempted"], "actionType":actionType, "playerInitiated":player, "timer":roomData['timer'], "clientInfo":roomData['clientInfo'], "hostInfo":roomData['hostInfo'],"clientInfo":roomData['clientInfo']}, broadcast=brdcst, include_self=True)
-
+def emitTeamData(teamKey, brdcst):
+    team = Team.getTeamByPrivate(teamKey)
+    emitTournData(team.superTournament, brdcst)
+    emit('teamDataUpdate', team.serialize, broadcast=brdcst)

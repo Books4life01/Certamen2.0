@@ -1,0 +1,93 @@
+
+{% extends "home/base.html" %}
+{% block script %}
+    <script>
+        let teamData = {};
+        let tournData ={};
+        const socket = io.connect("{{ ipaddress }}");
+        socket.emit("teamDataRefreshRequest", data={"teamKey":"{{teamKey}}"});
+        socket.on("tournDataUpdate", (data) => {
+            tournData = data;
+            resetPlayerOptions();
+
+        });
+        socket.on("teamDataUpdate", (data) => {
+            if(data.privateKey != "{{teamKey}}"){
+                return;
+            }
+            teamData = data;
+
+            let htmlOut = `
+            <h2>Team Name: ${teamData.name}</h2>
+            <h3>Team Members:</h3>
+            <ul>`;
+            ["1","2","3","4"].forEach(member => {htmlOut+=`<li>Player #${member}: ${teamData["player"+member]!=null ?tournData.players.find(player => player.privateKey ==teamData["player"+member]).name+ `<button type="button" onclick="removePlayer(${member})">Remove</button>`:"Not Assigned"}
+            
+            </li>`});
+            htmlOut += `</ul>`;
+            // Update team info on page
+            document.getElementById("team-info").innerHTML = htmlOut;
+            if(tournData != {}){
+                resetPlayerOptions();
+
+            }
+
+
+                
+        });
+        function resetPlayerOptions(){
+            const playerSelect = document.getElementById("player-select");
+            playerSelect.innerHTML = "";
+            for (const player of tournData.players) {
+                console.log(player.superTeam + " " + teamData.privateKey)
+                if (player.superTeam == "{{teamKey}}" && ![teamData["player1"], teamData["player2"], teamData["player3"], teamData["player4"]].includes(player.privateKey)) {
+                    const option = document.createElement("option");
+                    option.value = player.privateKey;
+                    option.text = player.name;
+                    playerSelect.appendChild(option);
+                }
+            }
+        }
+       
+
+        function addPlayer() {
+            console.log("Worked sucessfully")
+            let playerKey = document.getElementById("player-select").value;
+            let playerNum = 0;
+            if(teamData.player1 == null) {
+                playerNum = 1;
+            } else if(teamData.player2 == null) {
+                playerNum = 2;
+            } else if(teamData.player3 == null) {
+                playerNum = 3;
+            } else if(teamData.player4 == null) {
+                playerNum = 4;
+            }
+            else {
+                alert("Team is full");
+                return;
+            }
+            socket.emit("teamMemberAssignmentUpdate", data={"teamKey":teamData.privateKey, "playerKey":playerKey,"Num": playerNum}); 
+        }
+        function removePlayer(number){
+            socket.emit("teamMemberAssignmentUpdate", data={"teamKey":teamData.privateKey, "playerKey":null,"Num": number}); 
+        }
+    </script>
+{% endblock %}
+{% block content %}
+    <h1>Team Management</h1>
+    <div id="team-info">
+        
+    </div>
+    <div id="add-player">
+        <h3>Add Player:</h3>
+        <form>
+            <select id="player-select">
+                
+            </select>
+            <button type="button" onclick="addPlayer()">Add</button>
+        </form>
+    </div>
+{% endblock %}
+
+

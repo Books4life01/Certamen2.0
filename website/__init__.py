@@ -15,8 +15,9 @@ liveRoomClients = {}
 
 #ip address the server wil be running on so some of the html pages know what socket to onconnect to 
 #ip = "http://10.20.2.222:8080"
-#ip = "http://192.168.4.127:8080"
-ip = "http://192.168.4.245:8080"
+ip = "http://192.168.4.127:8080"
+#ip = "http://10.30.28.193:8080"
+#ip = "http://192.168.4.245:8080"
 #172.16.65.246
 #192.168.4.245
 
@@ -55,8 +56,8 @@ def createSocketServer(app):
     socketio = SocketIO(app, cors_allowed_origins="*")
 
     #import models
-    from .routes.updateSocket import on_roomResultUpdate, on_teamAssignmentUpdate, on_liveQuestionUpdate, on_roomCurQuestionNumberOrTypeUpdate
-    from .routes.refreshSocket import on_roomDataRefreshRequest, on_tournDataRefreshRequest
+    from .routes.updateSocket import on_roomResultUpdate, on_teamAssignmentUpdate, on_liveQuestionUpdate, on_roomCurQuestionNumberOrTypeUpdate, on_teamMemberAssignmentUpdate
+    from .routes.refreshSocket import on_roomDataRefreshRequest, on_tournDataRefreshRequest, on_teamDataRefreshRequest
     from .routes.baseSocket import on_disconnect, on_roomClientConnect, on_roomHostConnect
     
     #BASES
@@ -67,6 +68,7 @@ def createSocketServer(app):
     #REFRESHES
     socketio.on_event("roomDataRefreshRequest", on_roomDataRefreshRequest)
     socketio.on_event("tournDataRefreshRequest", on_tournDataRefreshRequest)
+    socketio.on_event("teamDataRefreshRequest", on_teamDataRefreshRequest)
     #UPDATES
     socketio.on_event("teamAssignmentUpdate", on_teamAssignmentUpdate)
     socketio.on_event("roomResultUpdate", on_roomResultUpdate)
@@ -75,6 +77,8 @@ def createSocketServer(app):
     socketio.on_event("roomCurQuestionUpdate", on_roomCurQuestionNumberOrTypeUpdate)
     socketio.on_event("liveQuestionUpdate", on_liveQuestionUpdate)
     socketio.on_event("roomCurQuestionTypeUpdate", on_roomCurQuestionNumberOrTypeUpdate)
+
+    socketio.on_event("teamMemberAssignmentUpdate", on_teamMemberAssignmentUpdate)
 
 
 

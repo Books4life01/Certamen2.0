@@ -20,8 +20,9 @@ def on_disconnect():
         if room["host"] == socketClient:
             #if the client is the host of the room
             roomObj = Room.getRoom(key)
-            #send out a rejectAnswer message and clearTimer liveQuestion broadcast update
-            on_liveQuestionUpdate(data = {"roomKey": roomObj.privateKey, "questionNum": roomObj.curQuestionNumber,"questionType": roomObj.curQuestionType, "actionType":"rejectAnswer","questionNum":roomObj.curQuestionNumber})
+            
+            #if the room is a liveTournament send out a rejectAnswer message and clearTimer liveQuestion broadcast update
+            if roomObj.isLive: on_liveQuestionUpdate(data = {"roomKey": roomObj.privateKey, "questionNum": roomObj.curQuestionNumber,"questionType": roomObj.curQuestionType, "actionType":"rejectAnswer","questionNum":roomObj.curQuestionNumber})
             #loop through all clients in the room
             for client in room["clients"]:
                 #emit a disconnect message to all clients in the room

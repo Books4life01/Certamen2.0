@@ -1,6 +1,7 @@
 //Global variables
 let results = [];
 let roomData = {};
+let roomTeams = {};
 
 
 //golbal timer for the wuestion timeout: used in liveQuestion.js
@@ -58,7 +59,8 @@ socket.on("tournTeamsUpdate", (data) => {
 socket.on("roomTeamsUpdate", (data) =>{
     //Ensure that the room we are recieving data for is the room we are in
     if (data.roomKey == roomKey){//roomKey is a global variable set in the html template
-        let teams = data.teams;
+        roomTeams = data.teams
+        let teams = data.teams.map(team => team.privateKey);
         let droppableZones = document.getElementsByClassName("drop-zone");
         for(let i = 0; i<4; i++){
             let teamKey = teams[i];
@@ -72,6 +74,15 @@ socket.on("roomTeamsUpdate", (data) =>{
         }
     }
 });
+socket.on("teamDataUpdate", (data)=>{
+    //ensure the team we are recieving data for is a team in the room
+    if([roomData.teamA, roomData.teamB, roomData.teamC, roomData.teamD].includes(data.privateKey)){
+        //update the team data if it is already in the room Teams DataObject
+        roomData.teamsData[data.privateKey] = data;
+        //call template specific team data update function
+        onRoomTeamsDataUpdate(data);
+    }
+})
 
 socket.on("roomResultsUpdate", (data) =>{
     //Ensure that the room we are recieving data for is the room we are in

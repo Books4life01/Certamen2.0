@@ -2,7 +2,8 @@ from flask_socketio import emit
 from .. import db   
 from ..models import Player, Tournament, Room, Team, Result
 from .. import liveRoomClients
-from .refreshSocket import emitRoomResults, emitRoomData, emitRoomLiveQuestionUpdate, emitTournData
+from .refreshSocket import emitRoomResults, emitRoomData, emitRoomLiveQuestionUpdate, emitRoomSelectedTeams, emitTournData, emitTeamData
+
 
 def on_teamAssignmentUpdate( message):
     #retrieve room Private Key
@@ -175,4 +176,20 @@ def on_liveQuestionUpdate(data):
     if(actionType=="acceptAnswer" or actionType=="endBroadcast" or actionType=="startBroadcast" or actionType=="rejectAnswer"):
         emitRoomData(roomPrivateKey, True)
         emitRoomResults(roomPrivateKey, True)
+def on_teamMemberAssignmentUpdate(data):
+    team = Team.getTeamByPrivate(data['teamKey'])
+    if data["Num"]==1:
+        team.player1 = data['playerKey']
+    elif data["Num"]==2:
+        team.player2 = data['playerKey']
+    elif data["Num"]==3:
+        team.player3 = data['playerKey']
+    elif data["Num"]==4:
+        team.player4 = data['playerKey']
+    db.session.commit()
+    emitTournData(team.superTournament, True)
+    #send a room selected teams update to all rooms in the tourn
+    for room in Tournament.getTourn(team.superTournament).getRooms():
+        emitRoomSelectedTeams(room["privateKey"], True)
+    emitTeamData(data['teamKey'], False)
 

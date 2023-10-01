@@ -20,11 +20,8 @@ def tourn():
      else:
         #retrieve object and check if it is a live tournament
         isLive = tourn.liveTourn
-        if isLive:
-            return render_template("host/liveTournHost.html", tournKey=tournPrivateKey, ipaddress = ip)
-        else:
-            return render_template("host/scoreTournHost.html", tournKey=tournPrivateKey, ipaddress = ip)
-@manage.route('/room')
+        return render_template("host/liveTournHost.html", tournKey=tournPrivateKey, ipaddress = ip, isLiveTourn = isLive)
+@manage.route('/room')  
 def room():
         roomPrivateKey = request.args.get('roomKey')
         room = Room.getRoomByPrivate(roomPrivateKey)
@@ -36,7 +33,16 @@ def room():
                 return render_template("host/liveRoomHost.html", roomKey=roomPrivateKey, ipaddress = ip)
             else:
                 return render_template("host/scoreRoomHost.html", roomKey=roomPrivateKey, ipaddress = ip)
-
+@manage.route('/team')
+def manageTeam():
+    teamPrivateKey = request.args.get('teamKey')
+    team = Team.getTeamByPrivate(teamPrivateKey)
+    tourn = Tournament.getTournByPrivate(team.superTournament)
+    if team == None:
+        flash("Invalid Private Team Key")
+        return redirect(url_for('manage.home'))
+    else:
+        return render_template("host/teamManage.html", teamKey=teamPrivateKey, ipaddress = ip, isLive = tourn.liveTourn)
 
      
 
