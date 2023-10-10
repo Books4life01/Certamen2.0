@@ -142,7 +142,7 @@
             let resultData = results[roomData.curQuestionNumber-1];
           
             $("#teamLetter").prop("selectedIndex", parseInt(getTeamNumberByKey(resultData.teamAnsweredKey)));
-            $("#playerNum").prop("selectedIndex",parseInt(getPlayerNumberByKey(resultData.playerAnsweredKey))-1);
+            $("#playerNum").prop("selectedIndex",parseInt(getPlayerNumberByKey(resultData.playerAnsweredKey)));
             $("#bonus1").prop("checked", resultData.bonus1);
             $("#bonus2").prop("checked", resultData.bonus2);
         }
@@ -394,6 +394,7 @@ body{
                     <option value="4">D</option>
                 </select>
                 <select class="form-select"id="playerNum" >
+                    <option value="0">None</option>
                     <option value="1">1</option>
                     <option value="2">2</option>
                     <option value="3">3</option>

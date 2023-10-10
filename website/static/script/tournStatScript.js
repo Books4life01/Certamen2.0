@@ -2,28 +2,32 @@ tournStats = {}
 
 
 socket.on('tournStatData', function(data){
+    if(data['tourn']['privateKey'] == tourn['privateKey']){
     tournStats = data;
     
     //update the leaderboards on the statistics page
-    let topPlayers = getTopNPlayers(10);
-    let topTeams = getTopNTeams(10);
+    let topPlayers = getTopNPlayers(20);
+    let topTeams = getTopNTeams(20);
+    let fontSize = 1.5;
 
     //add top players divs to the horizantal movers
         topPlayers.forEach((player, index) =>{
-            $(".horizantalMover.first").append($("<div class='playerRanking'></div>").text(`#${index+1}:${topPlayers[index]['name']} ${topPlayers[index]['totalPoints']}`));
-            $(".horizantalMover.last").append($("<div class='playerRanking'></div>").text(`#${index+1}: ${topPlayers[index]['name']} ${topPlayers[index]['totalPoints']}`));
+            // $(".horizantalMover.first").append($("<div class='playerRanking'></div>").text(`#${index+1}:${topPlayers[index]['name']} ${topPlayers[index]['totalPoints']}`));
+            // $(".horizantalMover.last").append($("<div class='playerRanking'></div>").text(`#${index+1}: ${topPlayers[index]['name']} ${topPlayers[index]['totalPoints']}`));
+            $("#topPlayers").append($("<div class='playerRanking'></div>").text(`#${index+1}:${topPlayers[index]['name']} ${topPlayers[index]['totalPoints']}`));
         })
-        $(".horizantalMover.first").css("animation-duration", 16*topPlayers.length + "s");       
-        $(".horizantalMover.last").css("animation-duration", 16*topPlayers.length + "s");
-        $(".horizantalMover.last").css("animation-delay", 8*topPlayers.length + "s");
+        // $(".horizantalMover.first").css("animation-duration", 16*topPlayers.length + "s");       
+        // $(".horizantalMover.last").css("animation-duration", 16*topPlayers.length + "s");
+        // $(".horizantalMover.last").css("animation-delay", 8*topPlayers.length + "s");
 
         topTeams.forEach((player, index) =>{
-            $(".verticalMover.first").append($("<div class='teamRanking'></div>").text(`#${index+1}:${topTeams[index]['name']} ${topTeams[index]['totalPoints']}`));
-            $(".verticalMover.last").append($("<div class='teamRanking'></div>").text(`#${index+1}: ${topTeams[index]['name']} ${topTeams[index]['totalPoints']}`));
+            // $(".verticalMover.first").append($("<div class='teamRanking'></div>").text(`#${index+1}:${topTeams[index]['name']} ${topTeams[index]['totalPoints']}`));
+            // $(".verticalMover.last").append($("<div class='teamRanking'></div>").text(`#${index+1}: ${topTeams[index]['name']} ${topTeams[index]['totalPoints']}`));
+            $("#topTeams").append($("<div class='teamRanking'></div>").text(`#${index+1}: ${topTeams[index]['name']} ${topTeams[index]['totalPoints']}`)).css("font-size", `${fontSize}rem`);
         })
-        $(".verticalMover.first").css("animation-duration", 16*topTeams.length + "s");       
-        $(".verticalMover.last").css("animation-duration", 16*topTeams.length + "s");
-        $(".verticalMover.last").css("animation-delay", 8*topTeams.length + "s");
+        // $(".verticalMover.first").css("animation-duration", 16*topTeams.length + "s");       
+        // $(".verticalMover.last").css("animation-duration", 16*topTeams.length + "s");
+        // $(".verticalMover.last").css("animation-delay", 8*topTeams.length + "s");
 
 
         $("#tournStatsLabel").text(tourn["name"]);
@@ -33,10 +37,11 @@ socket.on('tournStatData', function(data){
         $("#playerNumber").text("Players: " + tournStats['players'].length);
         $("#teamNumber").text("Teams: " + tournStats['teams'].length);
 
+        $("<div id='roomDetails' class='center'></div>").insertAfter($("#roomNumber"));
         //List Rooms
         tournStats['rooms'].forEach(room => {
             let roomStatData = $("<div class='roomStatData'></div>");
-            roomStatData.append($("<div class='roomName'></div>").text("Name: " + room['data']['name']));
+            roomStatData.append($("<div class='roomName'></div>").text(room['data']['name']).css("font-weight", "bold"));
             ['A', 'B', 'C', 'D'].forEach((letter) => {
                 let key = "team" + letter;
                 let teamKey = room['data'][key];
@@ -44,11 +49,14 @@ socket.on('tournStatData', function(data){
                     
                     let team = tournStats['teams'].find(tournTeam => tournTeam['privateKey'] == teamKey);
                     console.log(team)
-                    roomStatData.append($("<div class='roomTeam'></div>").text("Team: " + team['name'])); 
+                    roomStatData.append($("<div class='roomTeam'></div>").text("Team " + letter + ": " + team['name'] + " " + getStatsForTeam(teamKey)["rooms"][room["data"]["name"]])); 
                 }
             });
             //roomStatData.append($("<div class='roomPlayers'></div>").text("Players: " + room['data']['players'].length));
+            ($("#roomDetails")).append(roomStatData);
         });
+    }
+
 
 
     

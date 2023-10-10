@@ -21,7 +21,7 @@
             <h2>Team Name: ${teamData.name}</h2>
             <h3>Team Members:</h3>
             <ul>`;
-            ["1","2","3","4"].forEach(member => {htmlOut+=`<li>Player #${member}: ${teamData["player"+member]!=null ?tournData.players.find(player => player.privateKey ==teamData["player"+member]).name+ `<button type="button" onclick="removePlayer(${member})">Remove</button>`:"Not Assigned"}
+            ["1","2","3","4"].forEach(member => {htmlOut+=`<li>Player #${member}: ${teamData["player"+member]!=null && teamData['player' + member]!="" ?tournData.players.find(player => player.privateKey ==teamData["player"+member]).name+ `<button type="button" onclick="removePlayer(${member})">Remove</button>`:"Not Assigned"}
             
             </li>`});
             htmlOut += `</ul>`;
@@ -51,8 +51,9 @@
        
 
         function addPlayer() {
-            console.log("Worked sucessfully")
             let playerKey = document.getElementById("player-select").value;
+            console.log(playerKey)
+            if(playerKey == ""){alert("No Players left");return;}
             let playerNum = 0;
             if(teamData.player1 == null) {
                 playerNum = 1;

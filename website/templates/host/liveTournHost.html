@@ -182,6 +182,40 @@
         $('[data-toggle="tooltip"]').tooltip({
             placement: 'top'
         });
+        document.addEventListener("keydown",function(e){
+           
+
+            console.log(e.keyCode);
+            if(e.keyCode == 80   && e.altKey){//ctrl shift+r
+                e.preventDefault();
+
+                $("#addRoomModal").modal("show");
+                $(".active").removeClass("active show");
+                $("#player").addClass("active show");
+
+                $("#player-tab").addClass("active");
+
+            }
+            if(e.keyCode == 82  && e.altKey){
+                e.preventDefault();
+
+                $("#addRoomModal").modal("show");
+                $(".active").removeClass("active show");
+                $("#room").addClass("active show");
+
+                $("#room-tab").addClass("active");
+            }
+            if(e.keyCode == 84  && e.altKey){
+                e.preventDefault();
+                $("#addRoomModal").modal("show");
+                $(".active").removeClass("active show");
+                $("#team").addClass("active show");
+
+                $("#team-tab").addClass("active");
+
+            }
+            
+        }, true )
 
 
     });
@@ -416,18 +450,23 @@
                 <div class="statBorder" id="playerLeaderBoard">
                     <!-- Top PLayers by Points -->
                     <h1 id="TopPlayersLabel">Top Players</h1>
-                    <div class="horizantalInfiniteTextWrapper">
+                    <hr>
+
+                    <!-- <div class="horizantalInfiniteTextWrapper">
                        <div class="horizantalMover first"></div>
                        <div class="horizantalMover last"></div>
-                    </div>
+                    </div> -->
+                    <div id="topPlayers"></div>
                 </div>
                 <div class="statBorder" id="teamLeaderBoard">
                     <!-- List all the teams by WLT and Points -->
                     <h1 id="TopTeamsLabel" class="center">Top Teams</h1>
-                    <div class="verticalInfiniteTextWrapper">
+                    <hr>
+                    <!-- <div class="verticalInfiniteTextWrapper">
                         <div class="verticalMover first"></div>
                        <div class="verticalMover last"></div>
-                    </div>
+                    </div> -->
+                    <div id="topTeams"></div>
 
                 </div>
                 <div class="statBorder" id="tournStats">

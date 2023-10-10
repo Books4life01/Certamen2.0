@@ -216,10 +216,10 @@ class Room(db.Model):
     hostInfo = db.Column(db.String(2000), unique=False, default="Live Results")
    
     #Teams in the Room: Max of 4
-    teamA = db.Column(db.Integer, db.ForeignKey('team.privateKey'), nullable=True)
-    teamB = db.Column(db.Integer, db.ForeignKey('team.privateKey'), nullable=True)
-    teamC = db.Column(db.Integer, db.ForeignKey('team.privateKey'), nullable=True)
-    teamD = db.Column(db.Integer, db.ForeignKey('team.privateKey'), nullable=True)
+    teamA = db.Column(db.Integer, db.ForeignKey('team.privateKey'), nullable=False, default="")
+    teamB = db.Column(db.Integer, db.ForeignKey('team.privateKey'), nullable=False, default="")
+    teamC = db.Column(db.Integer, db.ForeignKey('team.privateKey'), nullable=False, default="")
+    teamD = db.Column(db.Integer, db.ForeignKey('team.privateKey'), nullable=False, default="")
     #players currently live from each team
     teamAPlayers = db.Column(db.Integer, unique=False, default=0)
     teamBPlayers = db.Column(db.Integer, unique=False, default=0)
@@ -228,7 +228,8 @@ class Room(db.Model):
 
     #return the selectedTeams in the room
     def getTeams(self):
-        return [Team.getTeamByPrivate(self.teamA).serialize if self.teamA != "" else {"privateKey":""}, Team.getTeamByPrivate(self.teamB).serialize if self.teamB != "" else {"privateKey":""}, Team.getTeamByPrivate(self.teamC).serialize if self.teamC != "" else {"privateKey":""}, Team.getTeamByPrivate(self.teamD).serialize if self.teamD != "" else {"privateKey":""}]
+        print(self.teamA)
+        return [Team.getTeamByPrivate(self.teamA).serialize if self.teamA != "" and self.teamA != None else {"privateKey":""}, Team.getTeamByPrivate(self.teamB).serialize if self.teamB != "" and self.teamB != None else {"privateKey":""}, Team.getTeamByPrivate(self.teamC).serialize if self.teamC != "" and self.teamC!=None else {"privateKey":""}, Team.getTeamByPrivate(self.teamD).serialize if self.teamD != "" and self.teamD != None else {"privateKey":""}]
     #get Results in the room
     def getResults(self):
         return [result.serialize for result in self.results]
@@ -483,7 +484,7 @@ class Result(db.Model):
     #calculate the total points
     @property
     def totalPoints(self):
-        return 10 if self.tossupAnswer != "" else 0 + 5 if self.bonus1 else 0 + 5 if self.bonus2 else 0
+        return (10 if self.tossup else 0) + (5 if self.bonus1 else 0) + (5 if self.bonus2 else 0)
     #serialize the result object by converting it to a dictionary; we do this so we can send it as a json object
     @property
     def serialize(self):
