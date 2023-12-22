@@ -3,3 +3,4 @@ instance/
 #python bytecode files
 __pycache__/
 *.py[cod]
+.ini
