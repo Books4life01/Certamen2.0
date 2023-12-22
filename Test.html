@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dynamic JSON to TXT Download</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            padding: 20px;
+        }
+        #downloadButton {
+            padding: 10px 20px;
+            font-size: 16px;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+
+    <h1>Dynamic JSON to TXT Download</h1>
+
+    <button id="downloadButton">Download JSON as TXT</button>
+
+    <script>
+        // Example JSON data
+        var jsonData = {
+            name: "John Doe",
+            age: 30,
+            city: "Example City"
+        };
+
+        // Event listener for the download button
+        document.getElementById('downloadButton').addEventListener('click', function() {
+            // Convert JSON to a string
+            var jsonString = JSON.stringify(jsonData, null, 2);
+
+            // Create a Blob containing the text
+            var blob = new Blob([jsonString], { type: 'text/plain' });
+
+            // Create a link element and trigger the download
+            var downloadLink = document.createElement('a');
+            downloadLink.href = window.URL.createObjectURL(blob);
+            downloadLink.download = 'data.txt';
+            downloadLink.click();
+        });
+    </script>
+
+</body>
+</html>

@@ -132,3 +132,7 @@
     justify-content:top;
     flex-wrap: wrap;
 }
+.card{
+    background-color: var(--secondary-color);
+    border: 5px solid var(--primary-color);
+}

@@ -8,7 +8,7 @@ from .refreshSocket import emitRoomResults, emitRoomData, emitRoomLiveQuestionUp
 def on_teamAssignmentUpdate( message):
     #retrieve room Private Key
     roomPrivateKey = message["roomKey"]
-    #retrive team assignments by teamPrivateKeys
+    #eretrive team assignments by teamPrivateKeys
     teamA,teamB,teamC,teamD = message["teamA"],message["teamB"],message["teamC"],message["teamD"]
     room = Room.getRoomByPrivate(roomPrivateKey)
     if room is None:

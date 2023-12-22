@@ -472,10 +472,18 @@
                 <div class="statBorder" id="tournStats">
                     <h1 id="tournStatsLabel" class="center"></h1>
                     <hr>    
-                    <div id="roomNumber" class="center"></div>
-                    <div id ="playerNumber" class="center"></div>
-                    <div id ="teamNumber" class="center"></div>
-                    <div id="livePlayerNumber" class="center"></div>                
+                    <div id="roomInfoContainer" class="center">
+                        <button id="roomNumber" class="center" type="button" data-bs-toggle="collapse" data-bs-target="#tournRoomsCollapseContainer" aria-expanded="false" aria-controls="tournRoomsCollapseContainer"></button>
+                        <div class="collapse" id = 'tournRoomsCollapseContainer'><div class="card card-body" id="tournRooms"></div></div>
+                    </div>
+                    <div id="playerInfoContainer" class="center">
+                        <button id="playerNumber" class="center" type="button" data-bs-toggle="collapse" data-bs-target="#tournPlayersCollapseContainer" aria-expanded="false" aria-controls="tournPlayersCollapseContainer"></button>
+                        <div class="collapse" id = 'tournPlayersCollapseContainer'><div class="card card-body" id="tournPlayers"></div></div>
+                    </div>
+                    <div id="teamInfoContainer" class="center">
+                        <button id="teamNumber" class="center" type="button" data-bs-toggle="collapse" data-bs-target="#tournTeamsCollapseContainer" aria-expanded="false" aria-controls="tournTeamCollapseContainer"></button>
+                        <div class="collapse" id = 'tournTeamsCollapseContainer'><div class="card card-body" id="tournTeams"></div></div>
+                    </div>
 
                     <!-- Live Players -->
 
