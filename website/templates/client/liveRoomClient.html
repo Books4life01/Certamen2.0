@@ -18,7 +18,7 @@
         $(document).on("keypress", function(e){
             if(e.which == 32){//Space Bar key
                 //if the player hasnt already buzzed in
-                if(!(player==undefined) && !roomData['playersAttempted'].includes(player['privateKey']) && roomData.curLiveQuestion != "")socket.emit("liveQuestionUpdate", data = {"roomKey": roomKey, "playerInitiated":player,"questionNum": roomData.curQuestionNumber,"questionType": roomData.curQuestionType, "actionType":"pause","questionNum":roomData.curQuestionNumber,  "answer":$("#answerInput").val()})
+                if(!(player==undefined) && (roomData.curQuestionType==0 &&!roomData['playersAttempted'].includes(player['privateKey']) && roomData.curLiveQuestion != "")||(roomData.curQuestionType != 0&&results[parseInt(roomData["curQuestionNumber"])-1].teamAnsweredKey==player["superTeam"]))socket.emit("liveQuestionUpdate", data = {"roomKey": roomKey, "playerInitiated":player,"questionNum": roomData.curQuestionNumber,"questionType": roomData.curQuestionType, "actionType":"pause","questionNum":roomData.curQuestionNumber,  "answer":$("#answerInput").val()})
             }
         });
         //Set up submit button to submit answer
