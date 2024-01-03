@@ -18,10 +18,10 @@
             teamData = data;
 
             let htmlOut = `
-            <h2>Team Name: ${teamData.name}</h2>
+            <h2 class = "center">Team ${teamData.name}</h2>
             <h3>Team Members:</h3>
             <ul>`;
-            ["1","2","3","4"].forEach(member => {htmlOut+=`<li>Player #${member}: ${teamData["player"+member]!=null && teamData['player' + member]!="" ?tournData.players.find(player => player.privateKey ==teamData["player"+member]).name+ `<button type="button" onclick="removePlayer(${member})">Remove</button>`:"Not Assigned"}
+            ["1","2","3","4"].forEach(member => {htmlOut+=`<li>Scoring Player #${member}: ${teamData["player"+member]!=null && teamData['player' + member]!="" ?tournData.players.find(player => player.privateKey ==teamData["player"+member]).name+ `<button type="button" onclick="removePlayer(${member})">Remove</button>`:"Not Assigned"}
             
             </li>`});
             htmlOut += `</ul>`;
@@ -76,7 +76,6 @@
     </script>
 {% endblock %}
 {% block content %}
-    <h1>Team Management</h1>
     <div id="team-info">
         
     </div>

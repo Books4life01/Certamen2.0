@@ -21,6 +21,8 @@ def on_teamAssignmentUpdate( message):
         db.session.commit()
     #TO-DO: send Updated team assignment to any clients connected to the room
     emitRoomData(roomPrivateKey, True)
+    emitRoomSelectedTeams(roomPrivateKey, True)
+
     emitTournData(room.superTournament, True)
 def on_roomResultUpdate(message):
     print("roomResultUpdate: ")
