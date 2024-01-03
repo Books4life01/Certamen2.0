@@ -45,7 +45,7 @@ class Player(db.Model):
     @staticmethod
     def generateKey(invalidKey = None):
         key = ""
-        values = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789"
+        values = "ABCDEFGHJKLMNOPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz0123456789"
         #Create a key while the key is empty or the key already exists
         while len(key) ==0 or Player.exists(key) or key == invalidKey:
             key = "" #reset key
@@ -155,7 +155,7 @@ class Tournament(db.Model):
     @staticmethod
     def generateKey(invalidKey = None):
         key = ""
-        values = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789"
+        values = "ABCDEFGHJKLMNOPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz0123456789"
         #Create a key while the key is empty or the key already exists
         while len(key) ==0 or Tournament.exists(key) or key == invalidKey:
             key = "" #reset key
@@ -354,7 +354,7 @@ class Room(db.Model):
     @staticmethod
     def generateKey(invalidKey=None):
         key = ""
-        values = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789"
+        values = "ABCDEFGHJKLMNOPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz0123456789"
         #Create a key while the key is empty or the key already exists
         while len(key) ==0 or Room.exists(key) or key == invalidKey:
             key = "" #reset key
@@ -435,7 +435,7 @@ class Team(db.Model):
     @staticmethod
     def generateTeamKey(invalidKey=None):
         key = ""
-        values = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789"
+        values = "ABCDEFGHJKLMNOPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz0123456789"
         #Create a key while the key is empty or the key already exists
         while len(key) ==0 or Room.exists(key) or key == invalidKey:
             key = "" #reset key

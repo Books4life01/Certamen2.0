@@ -11,9 +11,12 @@
     let results = [];
     let roomData = {};
     const socket = io.connect("{{ipaddress}}");
-
+    let isMobile = false;
     //Document Ready
     $(document).ready(() => {
+        isMobile = (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i).test(navigator.userAgent)
+        if(isMobile)$("#liveQuestionClientInfo").text("Double Tap to Buzz in");
+
         //Set up Space Bar to buzz in
         $(document).on("keypress", function(e){
             if(e.which == 32){//Space Bar key
@@ -21,6 +24,9 @@
                 if(!(player==undefined) && (roomData.curQuestionType==0 &&!roomData['playersAttempted'].includes(player['privateKey']) && roomData.curLiveQuestion != "")||(roomData.curQuestionType != 0&&results[parseInt(roomData["curQuestionNumber"])-1].teamAnsweredKey==player["superTeam"]))socket.emit("liveQuestionUpdate", data = {"roomKey": roomKey, "playerInitiated":player,"questionNum": roomData.curQuestionNumber,"questionType": roomData.curQuestionType, "actionType":"pause","questionNum":roomData.curQuestionNumber,  "answer":$("#answerInput").val()})
             }
         });
+        $(document).on("dblclick", (e)=>{
+            if(isMobile)socket.emit("liveQuestionUpdate", data = {"roomKey": roomKey, "playerInitiated":player,"questionNum": roomData.curQuestionNumber,"questionType": roomData.curQuestionType, "actionType":"pause","questionNum":roomData.curQuestionNumber,  "answer":$("#answerInput").val()})
+        })
         //Set up submit button to submit answer
         $("#submitAnswerButton").click(()=>{
             submitAnswer();
