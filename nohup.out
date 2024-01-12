@@ -1,0 +1,8 @@
+Current Host: 127.0.1.1
+Starting server... on http://159.203.180.66
+Traceback (most recent call last):
+  File "/home/Books4life01/Certamen2.0/main.py", line 23, in <module>
+    socketio.run(app, debug=True, host=(ip.replace("http://", "").replace(":8080", "")), port=8080)
+  File "/home/Books4life01/.local/lib/python3.10/site-packages/flask_socketio/__init__.py", line 641, in run
+    raise RuntimeError('The Werkzeug web server is not '
+RuntimeError: The Werkzeug web server is not designed to run in production. Pass allow_unsafe_werkzeug=True to the run() method to disable this error.
