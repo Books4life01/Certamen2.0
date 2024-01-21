@@ -1,7 +1,7 @@
 //Global variables
 let results = [];
 let roomData = {};
-let roomTeams = {};
+let roomTeams = [];
 
 
 //golbal timer for the wuestion timeout: used in liveQuestion.js
@@ -26,6 +26,8 @@ socket.on('roomDataUpdate', data=>{
         //call template specific room data update function
         onRoomDataUpdate();
         if(results.length>0)resetResults();
+        updateRoomStatistics();
+
     }
 });
 socket.on("tournTeamsUpdate", (data) => {
@@ -72,6 +74,7 @@ socket.on("roomTeamsUpdate", (data) =>{
                 droppableZones[i].children[1].appendChild(teamDiv);
             }
         }
+        updateRoomStatistics();
     }
 });
 socket.on("teamDataUpdate", (data)=>{
@@ -81,6 +84,7 @@ socket.on("teamDataUpdate", (data)=>{
         roomData.teamsData[data.privateKey] = data;
         //call template specific team data update function
         onRoomTeamsDataUpdate(data);
+        updateRoomStatistics();
     }
 })
 
@@ -93,6 +97,7 @@ socket.on("roomResultsUpdate", (data) =>{
         results = data.resultList;
         //reset the result html stuff on the page to match the new results
         resetResults();
+        updateRoomStatistics();
     }
     
 });
