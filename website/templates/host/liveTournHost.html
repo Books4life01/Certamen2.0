@@ -59,8 +59,8 @@
                 });
                 playerDiv.append(playerName);
                 playerDiv.append(playerTeam);
-                playerDiv.append(playerPublicKey);
                 playerDiv.append(playerPrivateKey);
+                playerDiv.append(playerPublicKey);
 
                 playerDiv.append(playerDeleteBtn);
                 $("#playerContainer").append(playerDiv);
@@ -101,7 +101,7 @@
             });
             //update players div
             $("#roomsContainer").empty();
-            var labelRoomDiv = $("<div class='room'><h6>Room Name</h6><h6>Join Room</h6><h6>Public Key</h6><h6>Private Key</h6>" + (tourn.liveTourn?"<h6>Status</h6>":"") + "<h6>Delete</h6></div>")
+            var labelRoomDiv = $("<div class='room'><h6>Room Name</h6><h6>Join Room</h6><h6>Private Key</h6><h6>Public Key</h6>" + (tourn.liveTourn?"<h6>Status</h6>":"") + "<h6>Delete</h6></div>")
             $("#roomsContainer").append(labelRoomDiv);
             tourn.rooms.forEach((room) => {
                 let roomDiv = $("<div class='room'></div>");
@@ -128,8 +128,8 @@
                 });
                 roomDiv.append(roomName);
                 roomDiv.append(manageRoomBtn);
-                roomDiv.append(roomPublicKey);
                 roomDiv.append(roomPrivateKey);
+                roomDiv.append(roomPublicKey);
 
                 if(tourn.liveTourn)roomDiv.append($("<h4></h4>").text(room.isLive ? "Live" : "Not Live"));
                 roomDiv.append(roomDeleteBtn);

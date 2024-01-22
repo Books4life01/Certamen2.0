@@ -26,6 +26,7 @@ class Player(db.Model):
 
 
     def delete(self):
+        db.session.query(Result).filter_by(playerAnsweredKey=self.privateKey).update({Result.playerAnsweredKey: ""})
         db.session.delete(self)
         db.session.commit()
     #see if a player exsists by its key either public or private
@@ -410,8 +411,25 @@ class Team(db.Model):
         }
     
     def delete(self):
+
+        db.session.query(Room).filter_by(teamA=self.privateKey).update({Room.teamA: ""})
+        db.session.query(Room).filter_by(teamB=self.privateKey).update({Room.teamB: ""})
+        db.session.query(Room).filter_by(teamC=self.privateKey).update({Room.teamC: ""})
+        db.session.query(Room).filter_by(teamD=self.privateKey).update({Room.teamD: ""})        
+        db.session.query(Result).filter_by(teamAnsweredKey=self.privateKey).update({Result.teamAnsweredKey: ""})
+
+
+        db.session.query(Player).filter_by(superTeam=self.privateKey).delete()    
         db.session.delete(self)
         db.session.commit()
+    def removePlayer(self, playerPrivateKey):
+        if playerPrivateKey == None: return False
+        elif playerPrivateKey == self.player1: self.player1 = ""
+        elif playerPrivateKey == self.player2: self.player2 = ""
+        elif playerPrivateKey == self.player3: self.player3 = ""
+        elif playerPrivateKey == self.player4: self.player4 = ""
+        db.session.commit()
+        
 
     #STATIC FUNCTIONS
     #see if a team exsists

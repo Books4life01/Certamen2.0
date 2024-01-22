@@ -102,6 +102,7 @@ def deleteTeam():
 def deletePlayer():
     playerPrivateKey = request.args.get('playerKey')
     player = Player.getPlayer(playerPrivateKey)
+    Team.getTeamByPrivate(player.superTeam).removePlayer(playerPrivateKey)
     player.delete()
     return ""
 
